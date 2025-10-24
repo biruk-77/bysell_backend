@@ -6,6 +6,8 @@ const Post = require('./post.model');
 const Connection = require('./connection.model');
 const Message = require('./message.model');
 const Notification = require('./notification.model');
+const Conversation = require('./conversation.model');
+const UserStatus = require('./userStatus.model');
 
 // --- User and Profile Relationship ---
 User.hasOne(Profile, {
@@ -117,11 +119,69 @@ Post.belongsTo(User, {
     as: 'user' // Changed from 'author' to 'user' for consistency
 });
 
+// --- Conversation Relationships ---
+// Conversation belongs to two participants
+Conversation.belongsTo(User, {
+    foreignKey: 'participant1Id',
+    as: 'participant1'
+});
+
+Conversation.belongsTo(User, {
+    foreignKey: 'participant2Id',
+    as: 'participant2'
+});
+
+// Conversation belongs to last message
+Conversation.belongsTo(Message, {
+    foreignKey: 'lastMessageId',
+    as: 'lastMessage'
+});
+
+// User can have many conversations as participant1
+User.hasMany(Conversation, {
+    foreignKey: 'participant1Id',
+    as: 'conversationsAsParticipant1'
+});
+
+// User can have many conversations as participant2
+User.hasMany(Conversation, {
+    foreignKey: 'participant2Id',
+    as: 'conversationsAsParticipant2'
+});
+
+// Message can be the last message of a conversation
+Message.hasOne(Conversation, {
+    foreignKey: 'lastMessageId',
+    as: 'conversationAsLastMessage'
+});
+
+// --- UserStatus Relationships ---
+// User has one status
+User.hasOne(UserStatus, {
+    foreignKey: 'userId',
+    as: 'userStatus',
+    onDelete: 'CASCADE'
+});
+
+// UserStatus belongs to user
+UserStatus.belongsTo(User, {
+    foreignKey: 'userId',
+    as: 'user'
+});
+
+// UserStatus can reference another user (typing to)
+UserStatus.belongsTo(User, {
+    foreignKey: 'isTypingTo',
+    as: 'typingToUser'
+});
+
 module.exports = {
     User,
     Profile,
     Post,
     Connection,
     Message,
-    Notification
+    Notification,
+    Conversation,
+    UserStatus
 };

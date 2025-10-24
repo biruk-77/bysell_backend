@@ -1,6 +1,6 @@
 # 🚀 ByAndSell - Professional Networking & Marketplace API
 
-A comprehensive Node.js REST API for a professional networking and marketplace platform that connects employers, employees, buyers, sellers, and connectors in a unified ecosystem.
+A comprehensive Node.js REST API with **real-time messaging** and **Socket.io integration** for a professional networking and marketplace platform that connects employers, employees, buyers, sellers, and connectors in a unified ecosystem.
 
 ## 📋 Table of Contents
 
@@ -51,6 +51,16 @@ ByAndSell is a modern, scalable API that serves as the backbone for a multi-role
 - ✅ Rate limiting ready
 - ✅ CORS configuration
 
+### 💬 Real-Time Communication
+- ✅ **Socket.io WebSocket integration**
+- ✅ **Real-time messaging system**
+- ✅ **User presence tracking** (online/offline/away/busy)
+- ✅ **Typing indicators**
+- ✅ **Connection requests with notifications**
+- ✅ **Message read receipts**
+- ✅ **Conversation management**
+- ✅ **Status cleanup service**
+
 ### 📊 Monitoring & Logging
 - ✅ Request/response logging
 - ✅ Performance monitoring
@@ -61,11 +71,16 @@ ByAndSell is a modern, scalable API that serves as the backbone for a multi-role
 ```mermaid
 graph TB
     A[Client Applications] --> B[Express.js Server]
+    A --> K[Socket.io Server]
     B --> C[Authentication Middleware]
+    K --> L[Socket Authentication]
     C --> D[Route Handlers]
+    L --> M[Real-time Events]
     D --> E[Controllers]
+    M --> E
     E --> F[Models]
     F --> G[MySQL Database]
+    N[Status Cleanup Service] --> F
     
     H[Logger Middleware] --> B
     I[Error Handler] --> B
@@ -80,25 +95,53 @@ test-project/
 │   └── database.js          # Database configuration
 ├── 📁 controller/
 │   ├── auth.controller.js   # Authentication logic
-│   └── profileController.js # Profile management
+│   ├── profileController.js # Profile management
+│   ├── message.controller.js # Messaging system
+│   ├── connection.controller.js # Connection requests
+│   ├── status.controller.js # User status management
+│   ├── notification.controller.js # Notifications
+│   ├── post.controller.js   # Posts management
+│   ├── search.controller.js # Search functionality
+│   └── admin.controller.js  # Admin operations
 ├── 📁 midlewares/          # Note: Typo in folder name
 │   ├── auth.middleware.js   # JWT verification
-│   └── upload.middleware.js # File upload handling
+│   ├── upload.middleware.js # File upload handling
+│   └── security.middleware.js # Security headers & rate limiting
 ├── 📁 models/
 │   ├── user.model.js       # User data model
-│   └── Profile.js          # Profile data model
+│   ├── Profile.js          # Profile data model
+│   ├── message.model.js    # Messages model
+│   ├── connection.model.js # Connections model
+│   ├── conversation.model.js # Conversations tracking
+│   ├── userStatus.model.js # User status & presence
+│   ├── notification.model.js # Notifications model
+│   ├── post.model.js       # Posts model
+│   └── index.js            # Model relationships
 ├── 📁 routes/
 │   ├── auth.routes.js      # Authentication routes
-│   └── profileRoutes.js    # Profile routes
+│   ├── profileRoutes.js    # Profile routes
+│   ├── message.routes.js   # Messaging API
+│   ├── connection.routes.js # Connection management
+│   ├── status.routes.js    # Status management
+│   ├── notification.routes.js # Notifications API
+│   ├── post.routes.js      # Posts API
+│   ├── search.routes.js    # Search API
+│   └── admin.routes.js     # Admin API
+├── 📁 service/
+│   └── statusCleanup.service.js # Automatic status cleanup
 ├── 📁 utils/
 │   └── logger.js           # Request logging utility
-├── 📁 service/             # Business logic layer (empty)
 ├── 📁 validator/           # Input validation (empty)
 ├── 📁 uploads/             # File upload storage
 │   └── profile-images/     # Profile image uploads
-├── server.js               # Application entry point
+├── server.js               # Application entry point (with Socket.io)
 ├── package.json            # Dependencies and scripts
-└── .env                    # Environment variables
+├── .env                    # Environment variables
+├── README.md               # Project documentation
+├── API_DOCUMENTATION.md    # Complete API reference
+├── SOCKET_EVENTS_REFERENCE.md # Socket.io events guide
+├── SOCKET_POSTMAN_COMPLETE_GUIDE.md # Testing guide
+└── POSTMAN_SETUP.md        # API testing setup
 ```
 
 ## 🔧 Installation

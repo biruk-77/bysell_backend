@@ -1,4 +1,6 @@
-# 🚀 Complete Socket.io + Postman Testing Guide
+# 🧪 **Complete Socket.io Testing Guide with Postman**
+## **Real-Time Event Testing Made Easy**
+### **Updated with all new events: leave_conversation, mark_messages_read, status management**
 
 ## 📋 **Environment Variables Setup**
 

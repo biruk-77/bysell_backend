@@ -81,6 +81,16 @@ Auth: {
 | `typing_start` | Start typing indicator | `{ receiverId: "user-id" }` | `{ success: true, message: "Typing indicator sent", receiverId: "..." }` |
 | `typing_stop` | Stop typing indicator | `{ receiverId: "user-id" }` | `{ success: true, message: "Typing indicator stopped", receiverId: "..." }` |
 
+### **🚪 Room Management**
+| Event | Description | Data to Send | Success Response |
+|-------|-------------|--------------|------------------|
+| `leave_conversation` | Leave a conversation room | `{ otherUserId: "user-id" }` | `{ success: true, message: "Successfully left conversation", roomName: "..." }` |
+
+### **📖 Message Management**
+| Event | Description | Data to Send | Success Response |
+|-------|-------------|--------------|------------------|
+| `mark_messages_read` | Mark messages as read | `{ otherUserId: "user-id" }` | `{ success: true, message: "Messages marked as read", otherUserId: "..." }` |
+
 ---
 
 ## ✅ **SUCCESS CALLBACKS**

@@ -171,14 +171,34 @@ exports.getConversations = async (req, res) => {
         
         conversations.forEach(message => {
             const partnerId = message.senderId === userId ? message.receiverId : message.senderId;
-            const partnerUsername = message.senderId === userId ? message.receiver.username : message.sender.username;
+            const partner = message.senderId === userId ? message.receiver : message.sender;
             
             if (!conversationMap.has(partnerId)) {
+                // Count unread messages from this partner
+                const unreadCount = conversations.filter(msg => 
+                    msg.senderId === partnerId && 
+                    msg.receiverId === userId && 
+                    !msg.isRead
+                ).length;
+                
                 conversationMap.set(partnerId, {
-                    partnerId,
-                    partnerUsername,
-                    lastMessage: message,
-                    unreadCount: 0 // You can implement unread count logic here
+                    id: `conversation_${[userId, partnerId].sort().join('_')}`, // Unique conversation ID
+                    otherUser: {
+                        id: partnerId,
+                        username: partner.username
+                    },
+                    latestMessage: {
+                        id: message.id,
+                        content: message.content,
+                        senderId: message.senderId,
+                        receiverId: message.receiverId,
+                        senderUsername: message.sender.username,
+                        messageType: message.messageType,
+                        isRead: message.isRead,
+                        createdAt: message.createdAt
+                    },
+                    unreadCount,
+                    updatedAt: message.createdAt
                 });
             }
         });
@@ -187,7 +207,8 @@ exports.getConversations = async (req, res) => {
 
         res.status(200).json({
             message: 'Conversations retrieved successfully',
-            conversations: conversationList
+            conversations: conversationList,
+            totalConversations: conversationList.length
         });
     } catch (error) {
         console.error('Get conversations error:', error);

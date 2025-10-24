@@ -1,4 +1,7 @@
-# 🚀 Complete Postman Setup Guide
+# 🚀 Complete Postman Collection Setup Guide
+
+## 📋 **Complete API Testing Environment**
+### **Updated for v2.0 with Status Management & Real-time Features**
 
 ## 📋 **Environment Variables Setup**
 

@@ -1,5 +1,6 @@
 # 🚀 **ByAndSell API Documentation**
-## **Complete Role-Based Authentication System**
+## **Complete REST API Reference**
+### **Version: 2.0** - Updated with complete messaging, status tracking, and real-time features
 
 ---
 
@@ -421,6 +422,123 @@ Authorization: Bearer TOKEN
 DELETE /api/notifications/:notificationId
 Authorization: Bearer TOKEN
 ```
+
+---
+
+### **📊 Status Management Routes**
+**Base**: `/api/status`
+
+#### **Update User Status**
+```http
+PUT /api/status
+Authorization: Bearer TOKEN
+Content-Type: application/json
+
+{
+  "status": "away"
+}
+```
+
+**Response (200)**:
+```json
+{
+  "success": true,
+  "message": "Status updated successfully",
+  "data": {
+    "status": "away",
+    "lastSeen": "2025-01-22T03:15:30.000Z"
+  }
+}
+```
+
+#### **Get User Status**
+```http
+GET /api/status/:userId
+Authorization: Bearer TOKEN
+```
+
+**Response (200)**:
+```json
+{
+  "success": true,
+  "message": "User status retrieved successfully",
+  "data": {
+    "status": {
+      "id": "status-uuid",
+      "userId": "user-uuid", 
+      "status": "online",
+      "lastSeen": "2025-01-22T03:15:30.000Z",
+      "socketId": "socket-id-123",
+      "isTypingTo": null,
+      "user": {
+        "id": "user-uuid",
+        "username": "alice123"
+      }
+    }
+  }
+}
+```
+
+#### **Get Online Users**
+```http
+GET /api/status/online/users?page=1&limit=50
+Authorization: Bearer TOKEN
+```
+
+**Response (200)**:
+```json
+{
+  "success": true,
+  "message": "Online users retrieved successfully",
+  "data": {
+    "totalOnline": 142,
+    "totalPages": 3,
+    "currentPage": 1,
+    "onlineUsers": [
+      {
+        "id": "status-uuid",
+        "userId": "user-uuid",
+        "status": "online",
+        "lastSeen": "2025-01-22T03:15:30.000Z",
+        "user": {
+          "id": "user-uuid",
+          "username": "alice123"
+        }
+      }
+    ]
+  }
+}
+```
+
+#### **Update Typing Status**
+```http
+PUT /api/status/typing
+Authorization: Bearer TOKEN
+Content-Type: application/json
+
+{
+  "isTyping": true,
+  "otherUserId": "user-uuid"
+}
+```
+
+**Response (200)**:
+```json
+{
+  "success": true,
+  "message": "Typing status updated successfully",
+  "data": {
+    "isTyping": true,
+    "otherUserId": "user-uuid"
+  }
+}
+```
+
+**Status Values**:
+- `online` - User is active
+- `away` - User is idle  
+- `busy` - User is busy/in DND mode
+- `offline` - User is disconnected
 
 ---
 

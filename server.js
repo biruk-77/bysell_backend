@@ -72,6 +72,7 @@ const messageRoutes = require('./routes/message.routes.js');
 const adminRoutes = require('./routes/admin.routes.js');
 const notificationRoutes = require('./routes/notification.routes.js');
 const searchRoutes = require('./routes/search.routes.js');
+const statusRoutes = require('./routes/status.routes.js');
 
 // Apply special rate limiting to auth routes
 app.use('/api/auth', authLimiter, authRoutes);
@@ -84,10 +85,12 @@ app.use('/api/messages', messageRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/search', searchRoutes);
+app.use('/api/status', statusRoutes);
 
 // --- SOCKET.IO SETUP ---
 // Store connected users
 const connectedUsers = new Map();
+const { UserStatus } = require('./models');
 
 // Socket.io authentication middleware
 const jwt = require('jsonwebtoken');
@@ -117,35 +120,61 @@ io.use((socket, next) => {
 });
 
 // Socket.io connection handling
-io.on('connection', (socket) => {
+io.on('connection', async (socket) => {
     console.log(`🔗 User ${socket.username} connected (${socket.userId})`);
     
-    // Store user connection
-    connectedUsers.set(socket.userId, {
-        socketId: socket.id,
-        username: socket.username,
-        userId: socket.userId
-    });
+    try {
+        // Store user connection
+        connectedUsers.set(socket.userId, {
+            socketId: socket.id,
+            username: socket.username,
+            userId: socket.userId
+        });
 
-    // Join user to their personal room
-    socket.join(`user_${socket.userId}`);
+        // Update user status in database
+        await UserStatus.upsert({
+            userId: socket.userId,
+            status: 'online',
+            lastSeen: new Date(),
+            socketId: socket.id
+        });
 
-    // Notify user is online
-    socket.broadcast.emit('user_online', {
-        userId: socket.userId,
-        username: socket.username
-    });
+        // Join user to their personal room
+        socket.join(`user_${socket.userId}`);
 
-    // Handle disconnection
-    socket.on('disconnect', () => {
-        console.log(`❌ User ${socket.username} disconnected`);
-        connectedUsers.delete(socket.userId);
-        
-        // Notify user is offline
-        socket.broadcast.emit('user_offline', {
+        // Notify user is online
+        socket.broadcast.emit('user_online', {
             userId: socket.userId,
             username: socket.username
         });
+    } catch (error) {
+        console.error('❌ Socket connection error:', error);
+    }
+
+    // Handle disconnection
+    socket.on('disconnect', async () => {
+        console.log(`❌ User ${socket.username} disconnected`);
+        connectedUsers.delete(socket.userId);
+        
+        try {
+            // Update user status in database
+            await UserStatus.upsert({
+                userId: socket.userId,
+                status: 'offline',
+                lastSeen: new Date(),
+                socketId: null,
+                isTypingTo: null,
+                typingStartedAt: null
+            });
+
+            // Notify user is offline
+            socket.broadcast.emit('user_offline', {
+                userId: socket.userId,
+                username: socket.username
+            });
+        } catch (error) {
+            console.error('❌ Socket disconnect error:', error);
+        }
     });
 
     // Handle joining conversation rooms
@@ -285,7 +314,7 @@ io.on('connection', (socket) => {
     });
 
     // Handle typing indicators
-    socket.on('typing_start', (data, callback) => {
+    socket.on('typing_start', async (data, callback) => {
         try {
             const { receiverId } = data;
             
@@ -296,6 +325,14 @@ io.on('connection', (socket) => {
                 };
                 return callback ? callback(error) : null;
             }
+
+            // Update typing status in database
+            await UserStatus.upsert({
+                userId: socket.userId,
+                isTypingTo: receiverId,
+                typingStartedAt: new Date(),
+                lastSeen: new Date()
+            });
 
             const roomName = [socket.userId, receiverId].sort().join('_');
             
@@ -327,7 +364,7 @@ io.on('connection', (socket) => {
         }
     });
 
-    socket.on('typing_stop', (data, callback) => {
+    socket.on('typing_stop', async (data, callback) => {
         try {
             const { receiverId } = data;
             
@@ -338,6 +375,14 @@ io.on('connection', (socket) => {
                 };
                 return callback ? callback(error) : null;
             }
+
+            // Update typing status in database
+            await UserStatus.upsert({
+                userId: socket.userId,
+                isTypingTo: null,
+                typingStartedAt: null,
+                lastSeen: new Date()
+            });
 
             const roomName = [socket.userId, receiverId].sort().join('_');
             
@@ -398,6 +443,76 @@ io.on('connection', (socket) => {
             if (callback) callback(errorResponse);
         }
     });
+
+    // Handle leaving conversation rooms
+    socket.on('leave_conversation', (data, callback) => {
+        try {
+            const { otherUserId } = data;
+            
+            if (!otherUserId) {
+                const error = { success: false, message: 'otherUserId is required' };
+                console.log(`❌ Leave conversation failed: ${error.message}`);
+                return callback ? callback(error) : null;
+            }
+
+            const roomName = [socket.userId, otherUserId].sort().join('_');
+            socket.leave(roomName);
+            console.log(`👋 ${socket.username} left conversation room: ${roomName}`);
+            
+            const success = {
+                success: true,
+                message: 'Successfully left conversation',
+                roomName: roomName
+            };
+            
+            if (callback) callback(success);
+        } catch (error) {
+            const errorResponse = { 
+                success: false, 
+                message: 'Failed to leave conversation',
+                error: error.message 
+            };
+            console.log(`❌ Leave conversation error:`, error);
+            if (callback) callback(errorResponse);
+        }
+    });
+
+    // Handle marking messages as read via socket
+    socket.on('mark_messages_read', (data, callback) => {
+        try {
+            const { otherUserId } = data;
+            
+            if (!otherUserId) {
+                const error = { success: false, message: 'otherUserId is required' };
+                return callback ? callback(error) : null;
+            }
+
+            // Notify the other user that their messages have been read
+            io.to(`user_${otherUserId}`).emit('messages_read', {
+                readBy: socket.userId,
+                readByUsername: socket.username,
+                timestamp: new Date()
+            });
+
+            console.log(`📖 ${socket.username} marked messages from ${otherUserId} as read`);
+
+            const success = {
+                success: true,
+                message: 'Messages marked as read',
+                otherUserId: otherUserId
+            };
+
+            if (callback) callback(success);
+        } catch (error) {
+            const errorResponse = { 
+                success: false, 
+                message: 'Failed to mark messages as read',
+                error: error.message 
+            };
+            console.log(`❌ Mark messages read error:`, error);
+            if (callback) callback(errorResponse);
+        }
+    });
 });
 
 // Make io available to routes
@@ -413,6 +528,9 @@ app.get('/test', (req, res) => {
 // Define the port the server will run on. It will use the one from .env or default to 5000.
 const PORT = process.env.PORT || 5000;
 
+// Import status cleanup service
+const statusCleanupService = require('./service/statusCleanup.service');
+
 // Start the server with Socket.io
 server.listen(PORT, async () => {
   try {
@@ -424,8 +542,30 @@ server.listen(PORT, async () => {
     await sequelize.sync({ alter: true });
     console.log('✅ Database tables synchronized.');
 
+    // Start status cleanup service
+    statusCleanupService.start();
+
     console.log(`🚀 Server is running on port ${PORT}`);
   } catch (error) {
     console.error('❌ Unable to connect to the database:', error);
   }
+});
+
+// Graceful shutdown
+process.on('SIGTERM', () => {
+  console.log('🔄 SIGTERM received, shutting down gracefully...');
+  statusCleanupService.stop();
+  server.close(() => {
+    console.log('✅ Server closed');
+    process.exit(0);
+  });
+});
+
+process.on('SIGINT', () => {
+  console.log('🔄 SIGINT received, shutting down gracefully...');
+  statusCleanupService.stop();
+  server.close(() => {
+    console.log('✅ Server closed');
+    process.exit(0);
+  });
 });
