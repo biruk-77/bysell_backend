@@ -5,6 +5,7 @@ const Profile = require('./Profile');
 const Post = require('./post.model');
 const Connection = require('./connection.model');
 const Message = require('./message.model');
+const Notification = require('./notification.model');
 
 // --- User and Profile Relationship ---
 User.hasOne(Profile, {
@@ -84,10 +85,43 @@ Message.belongsTo(User, {
     as: 'receiver'
 });
 
+// --- User and Notification Relationships ---
+// User can have many notifications
+User.hasMany(Notification, {
+    foreignKey: 'userId',
+    as: 'notifications',
+    onDelete: 'CASCADE'
+});
+
+// Notification belongs to user
+Notification.belongsTo(User, {
+    foreignKey: 'userId',
+    as: 'user'
+});
+
+// Notification can be from another user (optional)
+User.hasMany(Notification, {
+    foreignKey: 'fromUserId',
+    as: 'sentNotifications',
+    onDelete: 'SET NULL'
+});
+
+Notification.belongsTo(User, {
+    foreignKey: 'fromUserId',
+    as: 'fromUser'
+});
+
+// Fix Post relationship alias
+Post.belongsTo(User, {
+    foreignKey: 'userId',
+    as: 'user' // Changed from 'author' to 'user' for consistency
+});
+
 module.exports = {
     User,
     Profile,
     Post,
     Connection,
-    Message
+    Message,
+    Notification
 };

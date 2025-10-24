@@ -26,9 +26,36 @@ const User = sequelize.define('User', {
         allowNull: false
     },
     role: {
-        type: DataTypes.STRING,
+        type: DataTypes.ENUM('employer', 'employee', 'buyer', 'seller', 'connector', 'reviewer', 'admin'),
         allowNull: false,
-        defaultValue: 'user'
+        defaultValue: 'employee',
+        validate: {
+            isIn: [['employer', 'employee', 'buyer', 'seller', 'connector', 'reviewer', 'admin']]
+        }
+    },
+    status: {
+        type: DataTypes.ENUM('active', 'inactive', 'suspended', 'pending'),
+        defaultValue: 'active',
+        allowNull: false
+    },
+    lastLogin: {
+        type: DataTypes.DATE,
+        allowNull: true
+    },
+    isEmailVerified: {
+        type: DataTypes.BOOLEAN,
+        defaultValue: false
+    },
+    phoneNumber: {
+        type: DataTypes.STRING,
+        allowNull: true,
+        validate: {
+            isNumeric: true
+        }
+    },
+    location: {
+        type: DataTypes.STRING,
+        allowNull: true
     }
     
 },

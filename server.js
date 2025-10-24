@@ -24,36 +24,66 @@ const io = socketIo(server, {
 });
 
 const logger = require('./utils/logger');
+const { securityHeaders, apiLimiter, authLimiter } = require('./midlewares/security.middleware');
+
+// --- CORS MIDDLEWARE FOR EXPRESS ---
+const allowedOrigins = process.env.NODE_ENV === 'production' 
+    ? [process.env.CORS_ORIGIN] 
+    : ['http://localhost:3000', 'http://127.0.0.1:3000'];
+
+app.use((req, res, next) => {
+    const origin = req.headers.origin;
+    if (allowedOrigins.includes(origin)) {
+        res.header('Access-Control-Allow-Origin', origin);
+    }
+    res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+    res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
+    
+    // Handle preflight requests
+    if (req.method === 'OPTIONS') {
+        res.status(200).end();
+        return;
+    }
+    
+    next();
+});
+
+// --- SECURITY MIDDLEWARE ---
+app.use(securityHeaders); // Apply security headers
 app.use(logger);
 
 // This middleware parses incoming requests with JSON payloads.
-app.use(express.json());
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // Serve static files from uploads directory
 app.use('/uploads', express.static('uploads'));
 
-// --- MIDDLEWARE ---
-// This is a crucial step. This middleware parses incoming requests with JSON payloads.
-// It MUST come BEFORE you register any routes that need to read the request body (like login/register).
-app.use(express.json());
+// Global rate limiting
+app.use('/api/', apiLimiter);
 
 // --- ROUTES ---
-// Import our newly created authentication routes
+// Import all route modules
 const authRoutes = require('./routes/auth.routes');
-// Tell the app to use these routes for any URL starting with '/api/auth'
-app.use('/api/auth', authRoutes);
-
 const profileRoutes = require('./routes/profileRoutes.js');
-app.use('/api/profile', profileRoutes);
-
 const postRoutes = require('./routes/post.routes.js');
-app.use('/api/posts', postRoutes);
-
 const connectionRoutes = require('./routes/connection.routes.js');
-app.use('/api/connections', connectionRoutes);
-
 const messageRoutes = require('./routes/message.routes.js');
+const adminRoutes = require('./routes/admin.routes.js');
+const notificationRoutes = require('./routes/notification.routes.js');
+const searchRoutes = require('./routes/search.routes.js');
+
+// Apply special rate limiting to auth routes
+app.use('/api/auth', authLimiter, authRoutes);
+
+// Register all API routes
+app.use('/api/profile', profileRoutes);
+app.use('/api/posts', postRoutes);
+app.use('/api/connections', connectionRoutes);
 app.use('/api/messages', messageRoutes);
+app.use('/api/admin', adminRoutes);
+app.use('/api/notifications', notificationRoutes);
+app.use('/api/search', searchRoutes);
 
 // --- SOCKET.IO SETUP ---
 // Store connected users

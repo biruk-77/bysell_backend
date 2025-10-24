@@ -1,4 +1,4 @@
-// This variable will act as our request counter.
+// 
 let requestCount = 0;
 
 // This is our logger middleware function.

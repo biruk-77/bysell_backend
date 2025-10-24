@@ -1,20 +1,34 @@
-// Import the Profile and User models to interact with the database.
-const { Profile, User } = require('../models');
+// Import the Profile, User and Notification models to interact with the database.
+const { Profile, User, Notification } = require('../models');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const { createNotification } = require('./notification.controller');
 
 // controller/auth.controller.js
 
 exports.register = async (req, res) => {
     try {
+        console.log('📥 Registration request received:');
+        console.log('  - Body:', req.body);
+        console.log('  - Content-Type:', req.headers['content-type']);
+        
         const { username, email, password, role } = req.body;
+        
+        console.log('🔍 Extracted fields:');
+        console.log('  - username:', username, typeof username);
+        console.log('  - email:', email, typeof email);
+        console.log('  - password:', password ? '[HIDDEN]' : 'MISSING', typeof password);
+        console.log('  - role:', role, typeof role);
 
         // Validate required fields
         if (!username || !email || !password) {
+            console.log('❌ Missing required fields validation failed');
             return res.status(400).json({ 
                 message: 'Username, email, and password are required' 
             });
         }
+        
+        console.log('✅ Required fields validation passed');
 
         // Check if user already exists
         const existingUser = await User.findOne({ 
@@ -27,22 +41,39 @@ exports.register = async (req, res) => {
         });
 
         if (existingUser) {
+            console.log('❌ User already exists:', existingUser.email || existingUser.username);
             return res.status(400).json({ 
                 message: 'User with this email or username already exists' 
             });
         }
+        
+        console.log('✅ User does not exist, proceeding with creation');
 
         // Hash the password
+        console.log('🔐 Hashing password...');
         const saltRounds = 10;
         const hashedPassword = await bcrypt.hash(password, saltRounds);
+        console.log('✅ Password hashed successfully');
 
         // Create new user
+        console.log('👤 Creating user with data:', {
+            username,
+            email,
+            role: role || 'employee',
+            status: 'active',
+            isEmailVerified: false
+        });
+        
         const newUser = await User.create({
             username,
             email,
             password: hashedPassword,
-            role: role || 'user' // Default to user if no role provided
+            role: role || 'employee', // Default to employee if no role provided
+            status: 'active',
+            isEmailVerified: false
         });
+        
+        console.log('✅ User created successfully:', newUser.id);
 
         // Generate JWT token
         const token = jwt.sign(
@@ -56,21 +87,66 @@ exports.register = async (req, res) => {
             { expiresIn: '24h' }
         );
 
+        // Create welcome notification
+        try {
+            await createNotification({
+                userId: newUser.id,
+                type: 'system_announcement',
+                title: 'Welcome to ByAndSell!',
+                message: `Welcome ${newUser.username}! Your account has been created successfully. Complete your profile to get started.`,
+                priority: 'medium',
+                data: {
+                    isWelcome: true,
+                    userRole: newUser.role
+                }
+            });
+        } catch (notificationError) {
+            console.error('Failed to create welcome notification:', notificationError);
+            // Don't fail registration if notification fails
+        }
+
+        // Update last login
+        await newUser.update({ lastLogin: new Date() });
+
+        console.log(`✅ User registered: ${newUser.username} (${newUser.role})`);
+
         // Send success response (don't send password back)
         res.status(201).json({
+            success: true,
             message: 'User registered successfully',
             token,
             user: {
                 id: newUser.id,
                 username: newUser.username,
                 email: newUser.email,
-                role: newUser.role
+                role: newUser.role,
+                status: newUser.status,
+                isEmailVerified: newUser.isEmailVerified,
+                createdAt: newUser.createdAt
             }
         });
 
     } catch (error) {
-        console.error('Registration error:', error);
+        console.error('💥 Registration error:', error);
+        console.error('💥 Error details:', {
+            name: error.name,
+            message: error.message,
+            errors: error.errors,
+            stack: error.stack
+        });
+        
+        // Check if it's a Sequelize validation error
+        if (error.name === 'SequelizeValidationError') {
+            console.log('❌ Sequelize validation error:', error.errors);
+            return res.status(400).json({ 
+                success: false,
+                message: 'Validation failed',
+                errors: error.errors?.map(e => e.message) || []
+            });
+        }
+        
         res.status(500).json({ 
+            success: false,
             message: 'Something went wrong during registration' 
         });
     }
@@ -117,15 +193,24 @@ exports.login = async (req, res) => {
             { expiresIn: '24h' }
         );
 
+        // Update last login
+        await user.update({ lastLogin: new Date() });
+
+        console.log(`🔑 User logged in: ${user.username} (${user.role})`);
+
         // Send success response
         res.status(200).json({
+            success: true,
             message: 'Login successful',
             token,
             user: {
                 id: user.id,
                 username: user.username,
                 email: user.email,
-                role: user.role
+                role: user.role,
+                status: user.status,
+                isEmailVerified: user.isEmailVerified,
+                lastLogin: user.lastLogin
             }
         });
 

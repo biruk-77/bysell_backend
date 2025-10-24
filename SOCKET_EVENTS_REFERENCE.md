@@ -407,6 +407,7 @@ socket.on('disconnect', () => console.log('Disconnected!'));
 // Presence  
 socket.on('user_online', (data) => console.log(`${data.username} is online`));
 socket.on('user_offline', (data) => console.log(`${data.username} is offline`));
+socket.on('user_status_changed', (data) => console.log(`${data.username} is now ${data.status}`));
 
 // Connection Requests
 socket.on('connection_request_received', (data) => console.log('New connection request!', data));
@@ -417,18 +418,44 @@ socket.on('new_message', (data) => console.log('New message!', data));
 socket.on('message_notification', (data) => console.log('Message notification!', data));
 socket.on('messages_read', (data) => console.log('Messages read!', data));
 socket.on('message_deleted', (data) => console.log('Message deleted!', data));
+socket.on('user_typing', (data) => console.log(`${data.username} is ${data.isTyping ? 'typing' : 'not typing'}`));
 ```
 
-### **Essential Events to Emit:**
+### **Essential Events to Emit (with Callbacks):**
 ```javascript
 // Join conversation
-socket.emit('join_conversation', { otherUserId: 'USER_ID' });
+socket.emit('join_conversation', { otherUserId: 'USER_ID' }, (response) => {
+  console.log(response.success ? '✅ Joined!' : '❌ Failed:', response.message);
+});
 
 // Send direct message
 socket.emit('send_message', {
   receiverId: 'USER_ID',
   content: 'Hello!',
   messageType: 'text'
+}, (response) => {
+  console.log(response.success ? '✅ Sent!' : '❌ Failed:', response.message);
+});
+
+// Update status
+socket.emit('update_status', { status: 'away' }, (response) => {
+  console.log(response.success ? '✅ Status updated!' : '❌ Failed:', response.message);
+});
+
+// Get online users
+socket.emit('get_online_users', {}, (response) => {
+  if (response.success) {
+    console.log('✅ Online users:', response.onlineUsers);
+  }
+});
+
+// Typing indicators
+socket.emit('typing_start', { receiverId: 'USER_ID' }, (response) => {
+  console.log(response.success ? '✅ Typing started!' : '❌ Failed:', response.message);
+});
+
+socket.emit('typing_stop', { receiverId: 'USER_ID' }, (response) => {
+  console.log(response.success ? '✅ Typing stopped!' : '❌ Failed:', response.message);
 });
 ```
 
@@ -440,9 +467,13 @@ Your Socket.io system supports:
 - ✅ **Real-time Connection Requests**
 - ✅ **Instant Messaging** 
 - ✅ **User Presence (Online/Offline)**
+- ✅ **User Status Updates (Online/Away/Busy/Offline)**
+- ✅ **Typing Indicators**
+- ✅ **Online Users List**
 - ✅ **Read Receipts**
 - ✅ **Message Deletion Notifications**
 - ✅ **Role-based Authentication**
 - ✅ **Room-based Communication**
+- ✅ **Success/Error Callbacks for All Events**
 
 **Start testing with the workflow above! 🚀**
