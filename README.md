@@ -169,112 +169,44 @@ test-project/
 ├── README.md               # Project documentation
 ├── API_DOCUMENTATION.md    # Complete API reference
 ├── SOCKET_EVENTS_REFERENCE.md # Socket.io events guide
-├── SOCKET_POSTMAN_COMPLETE_GUIDE.md # Testing guide
 └── POSTMAN_SETUP.md        # API testing setup
 ```
 
-## 🔧 Installation
+## 🔧 Setup
 
-### **Prerequisites**
-| Requirement | Version | Purpose |
-|------------|---------|----------|
-| **Node.js** | v18+ | Runtime environment |
-| **MySQL** | v8.0+ | Database |
-| **npm** | v9+ | Package manager |
-| **Git** | v2.0+ | Version control |
-
-### **1. Clone the Repository**
 ```bash
-git clone https://github.com/your-org/ethio-connect-backend.git
-cd ethio-connect-backend
-```
+# 1. Clone
+git clone https://github.com/biruk-77/bysell_backend.git
+cd bysell_backend
 
-### **2. Install Dependencies**
-```bash
+# 2. Install
 npm install
-# or
-yarn install
-```
 
-**Current Dependencies:**
-```json
-{
-  "dependencies": {
-    "bcryptjs": "^3.0.2",
-    "dotenv": "^17.2.3", 
-    "express": "^5.1.0",
-    "jsonwebtoken": "^9.0.2",
-    "multer": "^2.0.2",
-    "mysql2": "^3.15.2",
-    "sequelize": "^6.37.7",
-    "uuid": "^13.0.0"
-  }
-}
-```
-
-### 3. Environment Setup
-Create a `.env` file in the root directory:
-
-```env
-# ===============================================
-# ETHIO CONNECT - Backend Configuration
-# ===============================================
-
-# Database Configuration
+# 3. Configure .env (see .env.example)
 DB_NAME=ethio_connect_db
-DB_USER=your_mysql_username
-DB_PASS=your_mysql_password
-DB_HOST=localhost
-DB_DIALECT=mysql
-DB_PORT=3306
-
-# JWT Configuration (Use strong random strings in production)
-JWT_SECRET=your_super_secret_jwt_key_change_in_production
-JWT_EXPIRATION=7d
-
-# Server Configuration
+DB_USER=root
+DB_PASS=your_password
+JWT_SECRET=your_secret_key
 PORT=5000
-NODE_ENV=development
-FRONTEND_URL=http://localhost:3000
 
-# File Upload Configuration
-MAX_FILE_SIZE=5242880
-UPLOAD_DIR=./uploads
-
-# Socket.io Configuration
-SOCKET_CORS_ORIGIN=http://localhost:3000
-```
-
-### 4. Database Setup
-```bash
-# Create database
+# 4. Create Database
 mysql -u root -p
-
-# In MySQL prompt:
 CREATE DATABASE ethio_connect_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-USE ethio_connect_db;
 
-# Verify database
-SHOW DATABASES;
-SELECT DATABASE();
+# 5. Run
+npm run dev    # Development
+npm start      # Production
 ```
+
+**Dependencies:**
+- Express 5.1, Sequelize 6.37, Socket.io 4.7
+- MySQL2, JWT, bcrypt, Multer
+- See package.json for full list
 
 ## 🚀 Quick Start
 
-### Development Mode
 ```bash
 npm run dev
-```
-
-### Production Mode
-```bash
-npm start
-```
-
-### Test the API
-```bash
-curl http://localhost:5000/test
-# Response: "Hello, World!"
 ```
 
 ## 📚 API Documentation
