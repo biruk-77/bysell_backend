@@ -10,9 +10,9 @@
 [![Socket.io](https://img.shields.io/badge/Socket.io-4.7+-black.svg)](https://socket.io/)
 [![License](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-**A comprehensive Node.js REST API with real-time messaging and Socket.io integration for Ethiopia's premier multi-category networking platform.**
+**Production-ready Node.js backend with JWT auth, real-time messaging (Socket.io), file uploads, and MySQL database.**
 
-[Features](#-features) • [Quick Start](#-quick-start) • [API Docs](#-api-documentation) • [Workflow](#-development-workflow) • [Deployment](#-deployment)
+[Features](#-features) • [Setup](#-setup) • [API](#-api-documentation) • [Development](#-development) • [Deployment](#-deployment)
 
 </div>
 
@@ -20,19 +20,11 @@
 
 ## 📋 Table of Contents
 
-- [🎯 Project Overview](#-project-overview)
-- [✨ Features](#-features)
-- [🏗️ Architecture](#️-architecture)
-- [🔧 Installation](#-installation)
-- [🚀 Quick Start](#-quick-start)
-- [📚 API Documentation](#-api-documentation)
-- [🎨 UI/UX Design Guidelines](#-uiux-design-guidelines)
-- [🔐 Authentication Flow](#-authentication-flow)
-- [📱 Frontend Integration Guide](#-frontend-integration-guide)
-- [🛠️ Development](#-development)
-- [📊 Database Schema](#-database-schema)
-- [🔒 Security](#-security)
-- [🚀 Deployment](#-deployment)
+- [🎯 Overview](#-project-overview) • [✨ Features](#-features) • [🏗️ Architecture](#️-architecture)
+- [🔧 Setup](#-setup) • [📚 API Docs](#-api-documentation) • [💻 Code Stats](#-backend-code-statistics)
+- [🔐 Auth Flow](#-authentication-flow) • [📱 Integration](#-api-integration-guide)
+- [🛠️ Development](#-development) • [📊 Database](#-database-schema) • [🔒 Security](#-security)
+- [🚀 Deployment](#-deployment) • [📈 Performance](#-performance)
 
 ## 🎯 Project Overview
 
@@ -531,303 +523,16 @@ socket.on('new_message', (data) => {
 socket.emit('send_message', messageData);
 ```
 
-## 🛠️ Development Workflow
-
-### 📋 **Complete Development Process**
-
-```mermaid
-graph LR
-    A[Start] --> B[Setup Environment]
-    B --> C[Create Feature Branch]
-    C --> D[Develop Feature]
-    D --> E[Test Locally]
-    E --> F{Tests Pass?}
-    F -->|No| D
-    F -->|Yes| G[Commit Changes]
-    G --> H[Push to GitHub]
-    H --> I[Create Pull Request]
-    I --> J[Code Review]
-    J --> K{Approved?}
-    K -->|No| D
-    K -->|Yes| L[Merge to Main]
-    L --> M[Deploy]
-```
-
-### **Step 1: Environment Setup** ⚙️
+## 🛠️ Development
 
 ```bash
-# 1. Clone and navigate
-git clone https://github.com/your-org/ethio-connect-backend.git
-cd ethio-connect-backend
-
-# 2. Install dependencies
-npm install
-
-# 3. Setup environment variables
-cp .env.example .env
-# Edit .env with your configurations
-
-# 4. Create database
-mysql -u root -p
-mysql> CREATE DATABASE ethio_connect_db;
-mysql> exit
-
-# 5. Start development server
-npm run dev
-
-# Server should be running on http://localhost:5000
-```
-
-### **Step 2: Feature Development** 💻
-
-```bash
-# Create a new feature branch
-git checkout -b feature/user-authentication
-
-# Make your changes
-# - Edit files
-# - Add new features
-# - Fix bugs
-
-# Test your changes
-npm test
-
-# Check code style
-npm run lint
-```
-
-### **Step 3: Code Organization** 📁
-
-```javascript
-// Follow this structure for new features
-// 1. Create Model (models/feature.model.js)
-const { DataTypes } = require('sequelize');
-
-module.exports = (sequelize) => {
-  return sequelize.define('Feature', {
-    id: {
-      type: DataTypes.UUID,
-      defaultValue: DataTypes.UUIDV4,
-      primaryKey: true
-    },
-    name: {
-      type: DataTypes.STRING,
-      allowNull: false
-    }
-  });
-};
-
-// 2. Create Controller (controller/feature.controller.js)
-exports.createFeature = async (req, res) => {
-  try {
-    // Business logic here
-    res.status(201).json({ message: 'Success' });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-};
-
-// 3. Create Routes (routes/feature.routes.js)
-const router = require('express').Router();
-const controller = require('../controller/feature.controller');
-const { verifyToken } = require('../midlewares/auth.middleware');
-
-router.post('/', verifyToken, controller.createFeature);
-
-module.exports = router;
-
-// 4. Register in server.js
-app.use('/api/features', require('./routes/feature.routes'));
-```
-
-### **Step 4: Testing Strategy** 🧪
-
-```javascript
-// Test file structure: tests/feature.test.js
-describe('Feature API', () => {
-  beforeAll(async () => {
-    // Setup test database
-  });
-
-  test('should create feature', async () => {
-    const response = await request(app)
-      .post('/api/features')
-      .set('Authorization', `Bearer ${token}`)
-      .send({ name: 'Test Feature' });
-    
-    expect(response.status).toBe(201);
-    expect(response.body.message).toBe('Success');
-  });
-
-  afterAll(async () => {
-    // Cleanup
-  });
-});
-```
-
-### **Step 5: Git Workflow** 🔄
-
-```bash
-# 1. Check status
-git status
-
-# 2. Add changes
+# Git workflow
+git checkout -b feature/your-feature
 git add .
+git commit -m "feat: description"
+git push origin feature/your-feature
 
-# 3. Commit with conventional commit message
-git commit -m "feat: add user authentication endpoint"
-
-# Commit types:
-# - feat: New feature
-# - fix: Bug fix
-# - docs: Documentation changes
-# - style: Code formatting
-# - refactor: Code restructuring
-# - test: Adding tests
-# - chore: Maintenance tasks
-
-# 4. Push to GitHub
-git push origin feature/user-authentication
-
-# 5. Create Pull Request on GitHub
-# - Go to repository
-# - Click "Compare & pull request"
-# - Add description
-# - Request review
-```
-
-### **Step 6: Code Review Checklist** ✅
-
-```markdown
-## Pull Request Review Checklist
-
-### Code Quality
-- [ ] Code follows project conventions
-- [ ] No console.log statements in production code
-- [ ] Error handling implemented properly
-- [ ] Input validation added
-- [ ] No sensitive data hardcoded
-
-### Testing
-- [ ] Unit tests added
-- [ ] Integration tests passing
-- [ ] Manual testing completed
-- [ ] Edge cases considered
-
-### Documentation
-- [ ] README updated if needed
-- [ ] API documentation updated
-- [ ] Code comments added where necessary
-- [ ] Changelog updated
-
-### Security
-- [ ] No SQL injection vulnerabilities
-- [ ] Authentication/Authorization checked
-- [ ] Input sanitization implemented
-- [ ] Dependencies up to date
-```
-
-### **Step 7: Deployment Process** 🚀
-
-```bash
-# 1. Merge to main branch
-git checkout main
-git pull origin main
-git merge feature/user-authentication
-
-# 2. Run production build
-npm run build
-
-# 3. Run database migrations (if any)
-npm run migrate:prod
-
-# 4. Test production environment
-npm run test:prod
-
-# 5. Deploy to server
-# - Using PM2
-pm2 restart ethio-connect-api
-
-# - Using Docker
-docker-compose up -d --build
-
-# - Using CI/CD (GitHub Actions)
-# Push to main triggers automatic deployment
-```
-
-### 📝 **Code Style Guidelines**
-
-```javascript
-// ESLint + Prettier configuration
-{
-  "extends": ["eslint:recommended", "prettier"],
-  "rules": {
-    "no-console": "warn",
-    "no-unused-vars": "error",
-    "prefer-const": "error",
-    "semi": ["error", "always"],
-    "quotes": ["error", "single"]
-  }
-}
-```
-
-### **Environment-Specific Commands** 🌍
-
-```bash
-# Development
-npm run dev              # Start with nodemon (auto-reload)
-npm run dev:debug        # Start with debugging enabled
-
-# Testing
-npm test                 # Run all tests
-npm run test:watch       # Run tests in watch mode
-npm run test:coverage    # Generate coverage report
-
-# Production
-npm start                # Start production server
-npm run migrate          # Run database migrations
-npm run seed             # Seed database with sample data
-
-# Maintenance
-npm run lint             # Check code style
-npm run lint:fix         # Auto-fix code style issues
-npm run clean            # Clean build artifacts
-```
-
-### 🧪 Testing Strategy
-
-```javascript
-// Example test structure
-describe('Authentication API', () => {
-  test('should register new user', async () => {
-    const userData = {
-      username: 'testuser',
-      email: 'test@example.com',
-      password: 'password123',
-      role: 'employee'
-    };
-
-    const response = await request(app)
-      .post('/api/auth/register')
-      .send(userData)
-      .expect(201);
-
-    expect(response.body.message).toBe('User registered successfully');
-    expect(response.body.token).toBeDefined();
-  });
-});
-```
-
-### 🔄 Git Workflow
-
-```bash
-# Feature development
-git checkout -b feature/user-profile-enhancement
-git add .
-git commit -m "feat: add profile image upload functionality"
-git push origin feature/user-profile-enhancement
-
-# Create pull request for review
+# Commit conventions: feat|fix|docs|style|refactor|test|chore
 ```
 
 ## 📊 Database Schema
@@ -920,131 +625,43 @@ app.use('/api/', limiter);
 
 ## 🚀 Deployment
 
-### 🐳 Docker Configuration
+```bash
+# PM2 (recommended)
+npm install -g pm2
+pm2 start server.js --name ethio-connect-api
+pm2 startup
+pm2 save
 
-```dockerfile
-# Dockerfile
-FROM node:18-alpine
+# Docker
+docker build -t ethio-connect-backend .
+docker run -p 5000:5000 --env-file .env ethio-connect-backend
 
-WORKDIR /app
-
-COPY package*.json ./
-RUN npm ci --only=production
-
-COPY . .
-
-EXPOSE 5000
-
-CMD ["npm", "start"]
+# Production checklist
+# - Set NODE_ENV=production
+# - Configure .env with production credentials
+# - Run migrations: node scripts/migrate-srs-updates.sql
+# - Setup SSL/HTTPS
+# - Enable monitoring
 ```
 
-### ☁️ Environment-Specific Configurations
+## 📈 Performance
 
-```yaml
-# docker-compose.yml
-version: '3.8'
-services:
-  api:
-    build: .
-    ports:
-      - "5000:5000"
-    environment:
-      - NODE_ENV=production
-      - DB_HOST=db
-    depends_on:
-      - db
-  
-  db:
-    image: mysql:8.0
-    environment:
-      MYSQL_ROOT_PASSWORD: rootpassword
-      MYSQL_DATABASE: byandsell_db
-    volumes:
-      - mysql_data:/var/lib/mysql
+- Connection pooling (max: 10, idle: 10s)
+- Response compression enabled
+- Efficient Sequelize queries
+- Socket.io room-based events
+- Status cleanup service (15min intervals)
 
-volumes:
-  mysql_data:
-```
-
-### 🌐 Production Deployment Checklist
-
-- [ ] Environment variables configured
-- [ ] Database migrations run
-- [ ] SSL certificates installed
-- [ ] Monitoring and logging setup
-- [ ] Backup strategy implemented
-- [ ] Load balancer configured
-- [ ] CDN setup for static assets
-
-## 📈 Performance Optimization
-
-### ⚡ Backend Optimizations
-
-```javascript
-// Database connection pooling
-const sequelize = new Sequelize(DB_NAME, DB_USER, DB_PASS, {
-  host: DB_HOST,
-  dialect: 'mysql',
-  pool: {
-    max: 10,
-    min: 0,
-    acquire: 30000,
-    idle: 10000
-  }
-});
-
-// Response compression
-const compression = require('compression');
-app.use(compression());
-
-// Caching strategy
-const redis = require('redis');
-const client = redis.createClient();
-```
-
-### 🎯 Frontend Performance
-
-```javascript
-// Code splitting
-const LazyComponent = lazy(() => import('./components/HeavyComponent'));
-
-// Image optimization
-<Image
-  src="/profile-image.jpg"
-  alt="Profile"
-  width={200}
-  height={200}
-  loading="lazy"
-  placeholder="blur"
-/>
-
-// API response caching
-const { data, error } = useSWR('/api/profile/me', fetcher, {
-  revalidateOnFocus: false,
-  revalidateOnReconnect: false
-});
-```
-
-## 🤝 Contributing
-
-### 📋 Development Setup
-
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Add tests for new functionality
-5. Ensure all tests pass
-6. Submit a pull request
-
-### 📝 Commit Message Convention
+## 📝 Commit Conventions
 
 ```
-feat: add user profile image upload
-fix: resolve authentication token expiration issue
-docs: update API documentation
-style: format code with prettier
-refactor: optimize database queries
-test: add unit tests for auth controller
+feat: add new feature
+fix: bug fix
+docs: documentation
+style: formatting
+refactor: code restructure
+test: add tests
+chore: maintenance
 ```
 
 ## 📞 Support & Contact

@@ -418,7 +418,7 @@ exports.getSearchSuggestions = async (req, res) => {
                 where: {
                     title: { [Op.like]: `%${searchTerm}%` }
                 },
-                attributes: ['id', 'title', 'type', 'category'],
+                attributes: ['id', 'title', 'postType', 'category'],
                 limit: 5,
                 order: [['title', 'ASC']]
             });
@@ -427,7 +427,7 @@ exports.getSearchSuggestions = async (req, res) => {
                 type: 'post',
                 id: post.id,
                 text: post.title,
-                subtitle: `${post.type} - ${post.category}`,
+                subtitle: `${post.postType} - ${post.category}`,
                 icon: 'post'
             })));
         }

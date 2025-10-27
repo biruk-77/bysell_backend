@@ -1,5 +1,5 @@
 // test-project/utils/advancedOtpUtil.js
-const speakeasy = require("speakeasy");
+// Uses simple random number OTP (not speakeasy) for better compatibility
 const crypto = require("crypto");
 const createSingleSMSUtil = require("./sendSingleSMSUtil");
 const { Op } = require("sequelize");
@@ -13,7 +13,8 @@ function createAdvancedOtpUtil({
   maxAttempts = 3,
   lockoutSeconds = 1800,
 }) {
-  const singleSMSUtil = createSingleSMSUtil({ token });
+  // SMS util is async now
+  let smsUtil = null;
 
   function hashSecret(secret) {
     return crypto.createHash("sha256").update(secret).digest("hex");
@@ -21,18 +22,26 @@ function createAdvancedOtpUtil({
 
   async function normalizePhone(phoneNumber) {
     if (!phoneNumber) throw new Error("Phone number is required");
-    let normalized = phoneNumber.replace(/\D/g, "");
+    const raw = String(phoneNumber).trim();
+    const digits = raw.replace(/\D/g, "");
 
-    if (normalized.match(/^(09|07)\d{7,8}$/)) {
-      normalized = normalized.replace(/^0/, "251");
-    } else if (normalized.match(/^251(9|7)\d{7,8}$/)) {
-      // Already has 251 prefix
-    } else {
-      throw new Error(
-        "Phone must be 9 or 10 digits starting with 9 or 7, optionally prefixed with 251"
-      );
+    // Local format 09/07 + 8 digits (10 total)
+    if (digits.length === 10 && (digits.startsWith('09') || digits.startsWith('07'))) {
+      const withoutZero = digits.slice(1); // drop leading 0
+      return '+251' + withoutZero;
     }
-    return normalized;
+
+    // International without plus: 2519/2517 + 8 digits (12 total)
+    if (digits.length === 12 && digits.startsWith('251') && (digits[3] === '9' || digits[3] === '7')) {
+      return '+' + digits;
+    }
+
+    // Already has plus?
+    if (raw.startsWith('+') && digits.length === 12 && digits.startsWith('251')) {
+      return '+' + digits;
+    }
+
+    throw new Error('Invalid Ethiopian phone number. Use 09XXXXXXXX or +2519XXXXXXXX');
   }
 
   async function generateAndSendOtp({
@@ -107,17 +116,13 @@ function createAdvancedOtpUtil({
       },
     });
 
-    // Generate TOTP secret
-    const secret = speakeasy.generateSecret({ length: 20 });
-    const token = speakeasy.totp({
-      secret: secret.base32,
-      encoding: "base32",
-      digits: otpLength,
-      step: otpExpirationSeconds,
-    });
+    // Generate random numeric OTP (like friend's working code)
+    const min = 10 ** (otpLength - 1);
+    const max = 10 ** otpLength - 1;
+    const token = String(Math.floor(min + Math.random() * (max - min + 1)));
 
-    // Store hashed secret and metadata
-    const hashedSecret = hashSecret(secret.base32);
+    // Store hashed token
+    const hashedSecret = hashSecret(token);
     const expiresAt = Date.now() + otpExpirationSeconds * 1000;
     await Otp.create({
       phone,
@@ -130,28 +135,42 @@ function createAdvancedOtpUtil({
     });
 
     // Send OTP via SMS
-    const msg = `Your Ethio Connect OTP is ${token}. It expires in ${
-      otpExpirationSeconds / 60
-    } minutes.`;
+    const companyName = process.env.COMPANY_NAME || 'Ethio Connect';
+    const msg = `${companyName}: Your OTP is ${token}. It expires in ${Math.floor(otpExpirationSeconds/60)} minutes.`;
+    
+    // Dev mode: Log OTP to console
+    if ((process.env.NODE_ENV || '').toLowerCase() !== 'production') {
+      console.log(`\n🔐 [DEV OTP] Phone: ${phone}`);
+      console.log(`🔐 [DEV OTP] Code: ${token}`);
+      console.log(`🔐 [DEV OTP] Expires in: ${otpExpirationSeconds} seconds\n`);
+    }
+    
     try {
-      const smsResult = await singleSMSUtil.sendSingleSMS({
+      // Initialize SMS util (async)
+      if (!smsUtil) {
+        smsUtil = await createSingleSMSUtil({ token });
+      }
+      
+      const smsResult = await smsUtil.sendSingleSMS({
         phone,
-        msg,
-        shortcode_id,
-        callback,
+        msg
       });
       return {
         success: true,
         message: "OTP sent successfully",
         expiresIn: otpExpirationSeconds,
         phoneNumber: phone,
-        // REMOVE IN PRODUCTION - only for development
-        devToken: process.env.NODE_ENV === 'development' ? token : undefined,
-        apiLogId: smsResult.data?.api_log_id,
+        sms: smsResult.data
       };
     } catch (error) {
-      await Otp.destroy({ where: { phone, referenceType, referenceId } });
-      throw new Error(`Failed to send OTP: ${error.message}`);
+      // Don't fail if SMS provider fails - log and return success
+      console.log(`[OTP SMS ERROR] phone=${phone} err=${error.message}`);
+      return {
+        success: true,
+        message: "OTP generated (SMS may have failed)",
+        expiresIn: otpExpirationSeconds,
+        phoneNumber: phone
+      };
     }
   }
 
@@ -208,15 +227,8 @@ function createAdvancedOtpUtil({
     // Increment attempts
     await otp.increment("attempts");
 
-    // Verify OTP
-    const isValid = speakeasy.totp.verify({
-      secret: otp.hashedSecret,
-      encoding: "hex",
-      token,
-      digits: otpLength,
-      step: otpExpirationSeconds,
-      window: 1,
-    });
+    // Verify OTP by comparing hashed values
+    const isValid = hashSecret(String(token)) === otp.hashedSecret;
 
     if (isValid) {
       await otp.update({ status: "verified" });
@@ -227,7 +239,6 @@ function createAdvancedOtpUtil({
       await Otp.destroy({ where: { phone, referenceType, referenceId } });
       return { success: true, message: "OTP verified successfully" };
     } else {
-      await otp.save();
       throw new Error("Invalid OTP");
     }
   }

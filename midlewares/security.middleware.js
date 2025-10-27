@@ -106,10 +106,36 @@ const validatePassword = (password) => {
     return password.length >= 6 && password.length <= 128;
 };
 
-// Validate phone number
+// Validate phone number (Ethiopian format)
 const validatePhone = (phone) => {
     if (!phone) return true; // Optional field
     if (typeof phone !== 'string') return false;
+    
+    // Remove all non-digit characters
+    const digits = phone.replace(/\D/g, '');
+    
+    // Ethiopian phone formats:
+    // 09XXXXXXXX (10 digits)
+    // 07XXXXXXXX (10 digits)
+    // 9XXXXXXXX (9 digits)
+    // 7XXXXXXXX (9 digits)
+    // 251XXXXXXXXX (12 digits)
+    // +251XXXXXXXXX (with +)
+    
+    if (digits.length === 10 && (digits.startsWith('09') || digits.startsWith('07'))) {
+        return true; // 09XXXXXXXX
+    }
+    if (digits.length === 9 && (digits.startsWith('9') || digits.startsWith('7'))) {
+        return true; // 9XXXXXXXX
+    }
+    if (digits.length === 12 && digits.startsWith('251')) {
+        return true; // 251XXXXXXXXX
+    }
+    if (digits.length === 13 && digits.startsWith('251')) {
+        return true; // Edge case
+    }
+    
+    // Fallback to validator library
     return validator.isMobilePhone(phone, 'any');
 };
 

@@ -1,72 +1,49 @@
 // test-project/utils/sendSingleSMSUtil.js
-// Geez SMS Integration for Ethiopian SMS Service
+// Geez SMS Integration (Updated to match working code)
 const axios = require('axios');
-const FormData = require('form-data');
 
-function createSingleSMSUtil({ token }) {
-  const GEEZ_SMS_API_URL = 'https://api.geezsms.com/api/v1/sms/send';
-  
-  async function sendSingleSMS({ phone, msg, shortcode_id, callback }) {
-    try {
-      console.log('📱 Sending SMS via Geez SMS API...');
-      console.log('  Phone:', phone);
-      console.log('  Message:', msg);
-      
-      // Create FormData (Geez SMS requires form-data format)
-      const formData = new FormData();
-      formData.append('token', token);
-      formData.append('phone', phone);
-      formData.append('msg', msg);
-      
-      if (shortcode_id) {
-        formData.append('shortcode_id', shortcode_id);
-      }
-      
-      if (callback) {
-        formData.append('callback', callback);
-      }
+async function createSingleSMSUtil({ token, baseUrl, senderId, shortcodeId }) {
+  const apiToken = token || process.env.GEEZSMS_TOKEN;
+  const apiBase = (baseUrl || process.env.GEEZSMS_BASE_URL || 'https://api.geezsms.com/api/v1').replace(/\/$/, '');
+  const from = senderId || process.env.GEEZSMS_SENDER_ID;
+  const shortcode_id = shortcodeId || process.env.GEEZSMS_SHORTCODE_ID;
 
-      // Send request to Geez SMS API
-      const response = await axios.post(GEEZ_SMS_API_URL, formData, {
-        headers: {
-          ...formData.getHeaders()
-        },
-        timeout: 15000 // 15 second timeout
-      });
+  return {
+    async sendSingleSMS({ phone, msg }) {
+      const url = `${apiBase}/sms/send`;
+      const payload = { phone, msg };
+      if (from) payload.sender_id = from;
+      if (shortcode_id) payload.shortcode_id = shortcode_id;
 
-      console.log('✅ SMS sent successfully!');
-      console.log('  Response:', response.data);
-      
-      return {
-        success: true,
-        data: {
-          api_log_id: response.data.api_log_id || 'unknown',
-          phone: response.data.phone,
-          message: response.data.message,
-          status: response.data.message_status || 'sent'
+      try {
+        console.log('📱 Sending SMS:', { phone, url });
+        
+        const res = await axios.post(url, payload, {
+          headers: {
+            Authorization: `Bearer ${apiToken}`,
+            'X-GeezSMS-Key': apiToken,
+            'Content-Type': 'application/json'
+          },
+          timeout: 15000
+        });
+        
+        console.log('✅ SMS sent successfully!');
+        return { ok: true, data: res.data };
+      } catch (err) {
+        const status = err.response?.status;
+        const data = err.response?.data;
+        let rawMessage = data?.message || data?.msg || data?.error || data?.detail || err.message || 'Failed to send SMS';
+        if (typeof rawMessage === 'object') {
+          try { rawMessage = JSON.stringify(rawMessage); } catch (_) { rawMessage = 'Failed to send SMS'; }
         }
-      };
-    } catch (error) {
-      console.error('❌ Geez SMS Error:', error.message);
-      
-      if (error.response) {
-        console.error('  Status:', error.response.status);
-        console.error('  Data:', error.response.data);
-        throw new Error(
-          error.response.data.message || 
-          error.response.data.error ||
-          `SMS API Error: ${error.response.status}`
-        );
-      } else if (error.request) {
-        console.error('  No response from SMS API');
-        throw new Error('SMS service is not responding. Please try again.');
-      } else {
-        throw new Error(`SMS service error: ${error.message}`);
+        const message = String(rawMessage);
+        const error = new Error(message);
+        error.status = status;
+        error.data = data;
+        throw error;
       }
     }
-  }
-
-  return { sendSingleSMS };
+  };
 }
 
 module.exports = createSingleSMSUtil;

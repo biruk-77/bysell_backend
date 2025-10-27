@@ -555,11 +555,29 @@ exports.sendOTP = async (req, res) => {
 
         console.log('📱 Sending OTP to:', phoneNumber);
 
-        // Normalize phone number
+        // Normalize phone number to Ethiopian format: 251XXXXXXXXX (12 digits total)
         let normalizedPhone = phoneNumber.replace(/\D/g, '');
-        if (normalizedPhone.match(/^(09|07)\d{7,8}$/)) {
-            normalizedPhone = normalizedPhone.replace(/^0/, '251');
+        
+        // Handle different Ethiopian phone formats
+        if (normalizedPhone.length === 13 && normalizedPhone.startsWith('2510')) {
+            // Fix: +2510989271027 → remove the extra 0 → 251989271027
+            normalizedPhone = '251' + normalizedPhone.slice(4); // Skip '2510', keep rest
+        } else if (normalizedPhone.length === 10 && (normalizedPhone.startsWith('09') || normalizedPhone.startsWith('07'))) {
+            // 09XXXXXXXX → 251XXXXXXXXX
+            normalizedPhone = '251' + normalizedPhone.slice(1); // 251 + 9 digits = 12 digits
+        } else if (normalizedPhone.length === 12 && normalizedPhone.startsWith('251')) {
+            // Already in correct format: 251XXXXXXXXX
+        } else if (normalizedPhone.length === 9 && (normalizedPhone.startsWith('9') || normalizedPhone.startsWith('7'))) {
+            // 9XXXXXXXX → 251XXXXXXXXX
+            normalizedPhone = '251' + normalizedPhone; // 251 + 9 digits = 12 digits
+        } else {
+            return res.status(400).json({
+                success: false,
+                message: 'Invalid Ethiopian phone number. Use 09XXXXXXXX format.'
+            });
         }
+        
+        console.log('📱 Normalized to:', normalizedPhone, `(${normalizedPhone.length} digits)`);
 
         // Check for existing pending OTP - COMMENTED OUT FOR DEVELOPMENT
         // const existingOtp = await OTP.findOne({
@@ -611,43 +629,47 @@ exports.sendOTP = async (req, res) => {
         let smsSuccess = false;
         try {
             const createSingleSMSUtil = require('../utils/sendSingleSMSUtil');
-            const smsUtil = createSingleSMSUtil({ 
-                token: process.env.SMS_API_TOKEN 
+            const smsUtil = await createSingleSMSUtil({ 
+                token: process.env.GEEZSMS_TOKEN 
             });
 
-            const message = `Your Ethio Connect verification code is: ${otpCode}. Valid for 5 minutes.`;
+            const companyName = process.env.COMPANY_NAME || 'Ethio Connect';
+            const message = `${companyName}: Your OTP is ${otpCode}. It expires in 5 minutes.`;
             
             console.log('📤 Attempting to send SMS...');
             console.log('  To:', normalizedPhone);
             console.log('  Message:', message);
-            console.log('  Token:', process.env.SMS_API_TOKEN ? 'Set ✓' : 'MISSING ✗');
+            console.log('  Token:', process.env.GEEZSMS_TOKEN ? 'Set ✓' : 'MISSING ✗');
             
             const smsResult = await smsUtil.sendSingleSMS({
-                phone: normalizedPhone,
-                msg: message,
-                shortcode_id: process.env.SMS_SHORTCODE_ID,
-                callback: process.env.SMS_CALLBACK_URL
+                phone: '+' + normalizedPhone,
+                msg: message
             });
 
             console.log('✅ SMS sent successfully!');
             console.log('  API Response:', smsResult);
             smsSuccess = true;
         } catch (smsError) {
-            console.error('❌ SMS FAILED!');
+            console.error('\n❌ SMS FAILED!');
             console.error('  Error:', smsError.message);
+            console.error('  Status:', smsError.status);
+            console.error('  Data:', smsError.data);
             console.error('  Stack:', smsError.stack);
-            // Continue anyway - in development, OTP is returned in response
+            console.error('\n🔍 DEBUG INFO:');
+            console.error('  Token exists:', !!process.env.GEEZSMS_TOKEN);
+            console.error('  Token length:', process.env.GEEZSMS_TOKEN?.length);
+            console.error('  Base URL:', process.env.GEEZSMS_BASE_URL);
+            console.error('  Phone:', '+' + normalizedPhone);
+            // SMS failed - user won't get OTP
         }
 
-        // In development, return the OTP
-        const isDevelopment = process.env.NODE_ENV !== 'production';
-
+        // PRODUCTION MODE: Never return OTP in response
+        // OTP should ONLY be sent via SMS to user's phone
         res.status(200).json({
             success: true,
-            message: `OTP sent to ${phoneNumber}`,
-            ...(isDevelopment && { otp: otpCode }),
+            message: smsSuccess ? `OTP sent to ${phoneNumber}` : `OTP generated but SMS failed. Contact support.`,
             expiresIn: 300,
-            smsStatus: smsSuccess ? 'sent' : 'failed (check server logs)'
+            phoneNumber: phoneNumber
         });
 
     } catch (error) {
@@ -672,12 +694,24 @@ exports.verifyOTPAndRegister = async (req, res) => {
         }
 
         console.log('🔍 Verifying OTP for:', phoneNumber);
+        console.log('🎯 Role from request:', role);
 
-        // Normalize phone number
+        // Normalize phone number to Ethiopian format: 251XXXXXXXXX (12 digits total)
         let normalizedPhone = phoneNumber.replace(/\D/g, '');
-        if (normalizedPhone.match(/^(09|07)\d{7,8}$/)) {
-            normalizedPhone = normalizedPhone.replace(/^0/, '251');
+        
+        // Handle different Ethiopian phone formats
+        if (normalizedPhone.length === 13 && normalizedPhone.startsWith('2510')) {
+            // Fix: +2510989271027 → remove the extra 0 → 251989271027
+            normalizedPhone = '251' + normalizedPhone.slice(4);
+        } else if (normalizedPhone.length === 10 && (normalizedPhone.startsWith('09') || normalizedPhone.startsWith('07'))) {
+            normalizedPhone = '251' + normalizedPhone.slice(1);
+        } else if (normalizedPhone.length === 12 && normalizedPhone.startsWith('251')) {
+            // Already in correct format
+        } else if (normalizedPhone.length === 9 && (normalizedPhone.startsWith('9') || normalizedPhone.startsWith('7'))) {
+            normalizedPhone = '251' + normalizedPhone;
         }
+        
+        console.log('🔍 Normalized to:', normalizedPhone, `(${normalizedPhone.length} digits)`);
 
         // Find the OTP record
         const otpRecord = await OTP.findOne({
@@ -765,11 +799,14 @@ exports.verifyOTPAndRegister = async (req, res) => {
         const randomPassword = Math.random().toString(36).slice(-12) + Date.now().toString(36);
         const hashedPassword = await bcrypt.hash(randomPassword, 10);
 
+        const userRole = role || 'employee';
+        console.log('👤 Creating user with role:', userRole);
+
         const newUser = await User.create({
             username,
             phoneNumber: normalizedPhone,
             password: hashedPassword,
-            role: role || 'employee',
+            role: userRole,
             status: 'active',
             isEmailVerified: false
         });
