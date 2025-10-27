@@ -1,3 +1,4 @@
+// test-project/SOCKET_EVENTS_REFERENCE.md
 # 🔥 **Complete Socket.io Events Reference**
 ## **For All User Roles (User & Admin)**
 
@@ -68,6 +69,12 @@ Auth: {
 |-------|-------------|--------------|------------------|
 | `join_conversation` | Join a conversation room | `{ otherUserId: "user-id" }` | `{ success: true, message: "Successfully joined conversation", roomName: "...", participants: [...] }` |
 | `send_message` | Send direct message | `{ receiverId: "user-id", content: "message", messageType: "text" }` | `{ success: true, message: "Message sent successfully", messageData: {...}, roomName: "..." }` |
+
+### **🤝 Connection Management**
+| Event | Description | Data to Send | Success Response |
+|-------|-------------|--------------|------------------|
+| `send_connection_request` | Send connection request with optional note | `{ receiverId: "user-id", message: "Optional note" }` | `{ success: true, message: "Connection request sent successfully", connection: {...} }` |
+| `respond_connection_request` | Accept/reject connection request | `{ connectionId: "connection-id", action: "accept/reject" }` | `{ success: true, message: "Connection request accepted/rejected", connection: {...} }` |
 
 ### **📊 Status & Presence Events**
 | Event | Description | Data to Send | Success Response |

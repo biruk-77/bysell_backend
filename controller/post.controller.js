@@ -1,3 +1,4 @@
+// test-project/controller/post.controller.js
 // controller/post.controller.js
 
 const { Post, User } = require('../models');

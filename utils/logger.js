@@ -1,3 +1,4 @@
+// test-project/utils/logger.js
 // Enhanced comprehensive logger that tells EVERYTHING
 let requestCount = 0;
 

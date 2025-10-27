@@ -1,3 +1,4 @@
+// test-project/routes/notification.routes.js
 // Notification routes
 const express = require('express');
 const router = express.Router();

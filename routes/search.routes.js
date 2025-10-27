@@ -1,3 +1,4 @@
+// test-project/routes/search.routes.js
 // Search and Discovery routes
 const express = require('express');
 const router = express.Router();

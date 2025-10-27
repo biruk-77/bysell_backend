@@ -1,3 +1,4 @@
+// test-project/models/userStatus.model.js
 // models/userStatus.model.js
 
 const { DataTypes } = require('sequelize');

@@ -1,3 +1,4 @@
+// test-project/routes/post.routes.js
 // routes/post.routes.js
 
 const express = require('express');

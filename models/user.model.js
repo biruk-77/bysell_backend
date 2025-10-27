@@ -1,3 +1,4 @@
+// test-project/models/user.model.js
 const { DataTypes } = require('sequelize');
 const sequelize = require('../config/database');
 
@@ -15,7 +16,7 @@ const User = sequelize.define('User', {
     },
     email: {
         type: DataTypes.STRING,
-        allowNull: false,
+        allowNull: true, // Allow null for phone-only registration
         unique: true,
         validate: {
             isEmail: true
@@ -26,11 +27,11 @@ const User = sequelize.define('User', {
         allowNull: false
     },
     role: {
-        type: DataTypes.ENUM('employer', 'employee', 'buyer', 'seller', 'connector', 'reviewer', 'admin'),
+        type: DataTypes.ENUM('employer', 'employee', 'buyer', 'seller', 'connector', 'reviewer', 'admin', 'service_provider', 'customer', 'renter', 'tenant', 'husband', 'wife'),
         allowNull: false,
         defaultValue: 'employee',
         validate: {
-            isIn: [['employer', 'employee', 'buyer', 'seller', 'connector', 'reviewer', 'admin']]
+            isIn: [['employer', 'employee', 'buyer', 'seller', 'connector', 'reviewer', 'admin', 'service_provider', 'customer', 'renter', 'tenant', 'husband', 'wife']]
         }
     },
     status: {

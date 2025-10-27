@@ -1,3 +1,4 @@
+// test-project/controller/profileController.js
 // We need to import our Profile and User models to interact with the database.
 const { Profile, User } = require('../models');
 const { v4: uuidv4 } = require('uuid');

@@ -1,3 +1,4 @@
+// test-project/controller/connection.controller.js
 // controller/connection.controller.js
 
 const { Connection, User } = require('../models');
@@ -167,7 +168,14 @@ exports.getMyConnections = async (req, res) => {
                     { requesterId: userId },
                     { receiverId: userId }
                 ],
-                status: 'accepted'
+                status: 'accepted',
+                // Prevent self-connections
+                [Op.not]: {
+                    [Op.and]: [
+                        { requesterId: userId },
+                        { receiverId: userId }
+                    ]
+                }
             },
             include: [
                 {

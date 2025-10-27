@@ -1,3 +1,4 @@
+// test-project/models/message.model.js
 // models/message.model.js
 
 const { DataTypes } = require('sequelize');

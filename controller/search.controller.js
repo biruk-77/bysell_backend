@@ -1,3 +1,4 @@
+// test-project/controller/search.controller.js
 // Search and Discovery controller
 const { User, Post, Connection, Profile } = require('../models');
 const { Op } = require('sequelize');

@@ -1,3 +1,4 @@
+// test-project/controller/message.controller.js
 // controller/message.controller.js
 
 const { Message, User, Connection } = require('../models');
@@ -12,6 +13,11 @@ exports.sendMessage = async (req, res) => {
         // Validate input
         if (!receiverId || !content) {
             return res.status(400).json({ message: 'Receiver ID and content are required.' });
+        }
+
+        // Prevent self-messaging
+        if (senderId === receiverId) {
+            return res.status(400).json({ message: 'You cannot send messages to yourself.' });
         }
 
         // Check if receiver exists
@@ -92,7 +98,14 @@ exports.getConversation = async (req, res) => {
     try {
         const userId = req.user.id;
         const { otherUserId } = req.params;
-        const { page = 1, limit = 50 } = req.query;
+        
+        // Prevent self-conversation
+        if (userId === otherUserId) {
+            return res.status(400).json({ 
+                message: 'You cannot view conversations with yourself.' 
+            });
+        }
+        const { page = 1, limit = 50, before } = req.query;
         const offset = (page - 1) * limit;
 
         // Check if other user exists
@@ -101,14 +114,25 @@ exports.getConversation = async (req, res) => {
             return res.status(404).json({ message: 'User not found.' });
         }
 
+        // Build where clause
+        const whereClause = {
+            [Op.or]: [
+                { senderId: userId, receiverId: otherUserId },
+                { senderId: otherUserId, receiverId: userId }
+            ]
+        };
+
+        // Add cursor-based pagination if 'before' is provided
+        if (before) {
+            const beforeMessage = await Message.findByPk(before);
+            if (beforeMessage) {
+                whereClause.createdAt = { [Op.lt]: beforeMessage.createdAt };
+            }
+        }
+
         // Get messages between the two users
         const { count, rows } = await Message.findAndCountAll({
-            where: {
-                [Op.or]: [
-                    { senderId: userId, receiverId: otherUserId },
-                    { senderId: otherUserId, receiverId: userId }
-                ]
-            },
+            where: whereClause,
             include: [
                 {
                     model: User,
@@ -117,7 +141,7 @@ exports.getConversation = async (req, res) => {
                 }
             ],
             limit: parseInt(limit),
-            offset: parseInt(offset),
+            offset: before ? 0 : parseInt(offset), // Don't use offset with cursor
             order: [['createdAt', 'DESC']]
         });
 
@@ -138,6 +162,7 @@ exports.getConversation = async (req, res) => {
 exports.getConversations = async (req, res) => {
     try {
         const userId = req.user.id;
+        console.log('📚 Getting conversations for user:', userId);
         const { page = 1, limit = 20 } = req.query;
         const offset = (page - 1) * limit;
 
@@ -173,6 +198,11 @@ exports.getConversations = async (req, res) => {
             const partnerId = message.senderId === userId ? message.receiverId : message.senderId;
             const partner = message.senderId === userId ? message.receiver : message.sender;
             
+            // Skip self-conversations
+            if (partnerId === userId) {
+                return;
+            }
+            
             if (!conversationMap.has(partnerId)) {
                 // Count unread messages from this partner
                 const unreadCount = conversations.filter(msg => 
@@ -204,6 +234,10 @@ exports.getConversations = async (req, res) => {
         });
 
         const conversationList = Array.from(conversationMap.values());
+
+        console.log('📚 Found', conversations.length, 'messages');
+        console.log('📚 Grouped into', conversationList.length, 'conversations');
+        console.log('📚 Conversation list:', JSON.stringify(conversationList, null, 2));
 
         res.status(200).json({
             message: 'Conversations retrieved successfully',

@@ -1,3 +1,4 @@
+// test-project/routes/message.routes.js
 // routes/message.routes.js
 
 const express = require('express');
@@ -11,10 +12,8 @@ const authMiddleware = require('../midlewares/auth.middleware.js');
 
 // --- MESSAGE ROUTES ---
 
-// @route   POST /api/messages/send
-// @desc    Send a message to another user
-// @access  Private
-router.post('/send', authMiddleware, messageController.sendMessage);
+// MESSAGE SENDING IS NOW SOCKET-ONLY
+// Use socket event 'send_message' instead of REST API
 
 // @route   GET /api/messages/conversations
 // @desc    Get all conversations for the current user

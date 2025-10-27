@@ -1,3 +1,4 @@
+// test-project/midlewares/security.middleware.js
 // Security middleware for validation, rate limiting, and sanitization
 const rateLimit = require('express-rate-limit');
 const helmet = require('helmet');
@@ -6,84 +7,84 @@ const xss = require('xss');
 
 // --- RATE LIMITING ---
 
-// General API rate limiting (increased for development)
-const apiLimiter = rateLimit({
-    windowMs: 1 * 60 * 1000, // 1 minute
-    max: 1000, // limit each IP to 1000 requests per minute
-    message: {
-        success: false,
-        message: 'Too many requests, please slow down.',
-        retryAfter: '1 minute'
-    },
-    standardHeaders: true,
-    legacyHeaders: false,
-    handler: (req, res) => {
-        console.log(`🚫 Rate limit exceeded for IP: ${req.ip} on ${req.path}`);
-        res.status(429).json({
-            success: false,
-            message: 'Too many requests from this IP, please try again after 1 minute.',
-            retryAfter: '1 minute'
-        });
-    }
-});
+// // General API rate limiting (increased for development)
+// const apiLimiter = rateLimit({
+//     windowMs: 1 * 60 * 1000, // 1 minute
+//     max: 1000, // limit each IP to 1000 requests per minute
+//     message: {
+//         success: false,
+//         message: 'Too many requests, please slow down.',
+//         retryAfter: '1 minute'
+//     },
+//     standardHeaders: true,
+//     legacyHeaders: false,
+//     handler: (req, res) => {
+//         console.log(`🚫 Rate limit exceeded for IP: ${req.ip} on ${req.path}`);
+//         res.status(429).json({
+//             success: false,
+//             message: 'Too many requests from this IP, please try again after 1 minute.',
+//             retryAfter: '1 minute'
+//         });
+//     }
+// });
 
-// Strict rate limiting for authentication endpoints (relaxed for development)
-const authLimiter = rateLimit({
-    windowMs: 5 * 60 * 1000, // 5 minutes
-    max: 50, // limit each IP to 50 requests per 5 minutes for auth
-    message: {
-        success: false,
-        message: 'Too many authentication attempts from this IP, please try again after 15 minutes.',
-        retryAfter: '15 minutes'
-    },
-    skipSuccessfulRequests: true,
-    handler: (req, res) => {
-        console.log(`🚫 Auth rate limit exceeded for IP: ${req.ip} on ${req.path}`);
-        res.status(429).json({
-            success: false,
-            message: 'Too many authentication attempts from this IP, please try again after 15 minutes.',
-            retryAfter: '15 minutes'
-        });
-    }
-});
+// // Strict rate limiting for authentication endpoints (relaxed for development)
+// const authLimiter = rateLimit({
+//     windowMs: 5 * 60 * 1000, // 5 minutes
+//     max: 50, // limit each IP to 50 requests per 5 minutes for auth
+//     message: {
+//         success: false,
+//         message: 'Too many authentication attempts from this IP, please try again after 15 minutes.',
+//         retryAfter: '15 minutes'
+//     },
+//     skipSuccessfulRequests: true,
+//     handler: (req, res) => {
+//         console.log(`🚫 Auth rate limit exceeded for IP: ${req.ip} on ${req.path}`);
+//         res.status(429).json({
+//             success: false,
+//             message: 'Too many authentication attempts from this IP, please try again after 15 minutes.',
+//             retryAfter: '15 minutes'
+//         });
+//     }
+// });
 
-// Password reset rate limiting
-const passwordResetLimiter = rateLimit({
-    windowMs: 60 * 60 * 1000, // 1 hour
-    max: 3, // limit each IP to 3 password reset requests per hour
-    message: {
-        success: false,
-        message: 'Too many password reset attempts, please try again after 1 hour.',
-        retryAfter: '1 hour'
-    },
-    handler: (req, res) => {
-        console.log(`🚫 Password reset rate limit exceeded for IP: ${req.ip}`);
-        res.status(429).json({
-            success: false,
-            message: 'Too many password reset attempts, please try again after 1 hour.',
-            retryAfter: '1 hour'
-        });
-    }
-});
+// // Password reset rate limiting
+// const passwordResetLimiter = rateLimit({
+//     windowMs: 60 * 60* 1000, // 1 hour
+//     max: 3, // limit each IP to 3 password reset requests per hour
+//     message: {
+//         success: false,
+//         message: 'Too many password reset attempts, please try again after 1 hour.',
+//         retryAfter: '1 hour'
+//     },
+//     handler: (req, res) => {
+//         console.log(`🚫 Password reset rate limit exceeded for IP: ${req.ip}`);
+//         res.status(429).json({
+//             success: false,
+//             message: 'Too many password reset attempts, please try again after 1 hour.',
+//             retryAfter: '1 hour'
+//         });
+//     }
+// });
 
-// Admin actions rate limiting
-const adminLimiter = rateLimit({
-    windowMs: 60 * 1000, // 1 minute
-    max: 30, // limit admins to 30 requests per minute
-    message: {
-        success: false,
-        message: 'Too many admin requests, please slow down.',
-        retryAfter: '1 minute'
-    },
-    handler: (req, res) => {
-        console.log(`🚫 Admin rate limit exceeded for user: ${req.user?.username || 'unknown'} on ${req.path}`);
-        res.status(429).json({
-            success: false,
-            message: 'Too many admin requests, please slow down.',
-            retryAfter: '1 minute'
-        });
-    }
-});
+// // Admin actions rate limiting
+// const adminLimiter = rateLimit({
+//     windowMs: 60 * 1000, // 1 minute
+//     max: 30, // limit admins to 30 requests per minute
+//     message: {
+//         success: false,
+//         message: 'Too many admin requests, please slow down.',
+//         retryAfter: '1 minute'
+//     },
+//     handler: (req, res) => {
+//         console.log(`🚫 Admin rate limit exceeded for user: ${req.user?.username || 'unknown'} on ${req.path}`);
+//         res.status(429).json({
+//             success: false,
+//             message: 'Too many admin requests, please slow down.',
+//             retryAfter: '1 minute'
+//         });
+//     }
+// });
 
 // --- INPUT VALIDATION ---
 
@@ -102,7 +103,7 @@ const validateUsername = (username) => {
 // Validate password strength
 const validatePassword = (password) => {
     if (!password || typeof password !== 'string') return false;
-    return password.length >= 8 && password.length <= 128;
+    return password.length >= 6 && password.length <= 128;
 };
 
 // Validate phone number
@@ -191,28 +192,46 @@ const validateUserRegistration = (req, res, next) => {
         const { username, email, password, role, phoneNumber } = req.body;
         const errors = [];
 
-        // Validate required fields
-        if (!username) errors.push('Username is required');
-        else if (!validateUsername(username)) {
+        // EITHER email OR phoneNumber is required (not both mandatory)
+        if (!email && !phoneNumber) {
+            errors.push('Either email or phone number is required');
+        }
+
+        // Username is only required for email registration
+        // For phone registration, username will be auto-generated
+        if (email && !username) {
+            errors.push('Username is required for email registration');
+        }
+        
+        // Validate username format if provided
+        if (username && !validateUsername(username)) {
             errors.push('Username must be 3-30 characters long and contain only letters, numbers, and underscores');
         }
 
-        if (!email) errors.push('Email is required');
-        else if (!validateEmail(email)) {
+        // Validate email if provided
+        if (email && !validateEmail(email)) {
             errors.push('Please provide a valid email address');
+        }
+
+        // Validate phone if provided
+        if (phoneNumber && !validatePhone(phoneNumber)) {
+            errors.push('Please provide a valid phone number');
         }
 
         if (!password) errors.push('Password is required');
         else if (!validatePassword(password)) {
-            errors.push('Password must be at least 8 characters long');
+            errors.push('Password must be at least 6 characters long');
         }
 
-        if (role && !['employer', 'employee', 'buyer', 'seller', 'connector'].includes(role)) {
+        // Validate role against all valid roles from User model
+        const validRoles = [
+            'employer', 'employee', 'buyer', 'seller', 'connector', 
+            'reviewer', 'admin', 'service_provider', 'customer', 
+            'renter', 'tenant', 'husband', 'wife'
+        ];
+        
+        if (role && !validRoles.includes(role)) {
             errors.push('Invalid role specified');
-        }
-
-        if (phoneNumber && !validatePhone(phoneNumber)) {
-            errors.push('Please provide a valid phone number');
         }
 
         if (errors.length > 0) {
@@ -240,18 +259,36 @@ const validateUserRegistration = (req, res, next) => {
     }
 };
 
-// User login validation
+// User login validation (supports email, username, or phone)
 const validateUserLogin = (req, res, next) => {
     try {
-        const { email, password } = req.body;
+        const { email, username, phone, password } = req.body;
         const errors = [];
 
-        if (!email) errors.push('Email is required');
-        else if (!validateEmail(email)) {
+        // At least one login identifier is required
+        if (!email && !username && !phone) {
+            errors.push('Email, username, or phone number is required');
+        }
+
+        // Validate email format if provided
+        if (email && !validateEmail(email)) {
             errors.push('Please provide a valid email address');
         }
 
-        if (!password) errors.push('Password is required');
+        // Validate username format if provided
+        if (username && !validateUsername(username)) {
+            errors.push('Please provide a valid username (3-30 characters, letters, numbers, underscores only)');
+        }
+
+        // Validate phone format if provided
+        if (phone && !validatePhone(phone)) {
+            errors.push('Please provide a valid phone number');
+        }
+
+        // Password is always required
+        if (!password) {
+            errors.push('Password is required');
+        }
 
         if (errors.length > 0) {
             return res.status(400).json({
@@ -262,8 +299,11 @@ const validateUserLogin = (req, res, next) => {
         }
 
         // Sanitize inputs
-        req.body.email = sanitizeString(email, 254);
+        if (email) req.body.email = sanitizeString(email, 254);
+        if (username) req.body.username = sanitizeString(username, 30);
+        if (phone) req.body.phone = sanitizeString(phone, 20);
 
+        console.log(`✅ Login validation passed for: ${email || username || phone}`);
         next();
     } catch (error) {
         console.error('Login validation error:', error);
@@ -473,12 +513,15 @@ const securityHeaders = helmet({
     crossOriginEmbedderPolicy: false
 });
 
+// No-op middleware function when rate limiting is disabled
+const noOpMiddleware = (req, res, next) => next();
+
 module.exports = {
-    // Rate limiters
-    apiLimiter,
-    authLimiter,
-    passwordResetLimiter,
-    adminLimiter,
+    // Rate limiters (disabled for development)
+    apiLimiter: noOpMiddleware,
+    authLimiter: noOpMiddleware,
+    passwordResetLimiter: noOpMiddleware,
+    adminLimiter: noOpMiddleware,
     
     // Validation functions
     validateEmail,

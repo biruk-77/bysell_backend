@@ -1,3 +1,4 @@
+// test-project/controller/admin.controller.js
 // Admin controller for user and system management
 const { User, Post, Connection, Message, Notification } = require('../models');
 const { Op } = require('sequelize');

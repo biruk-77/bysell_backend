@@ -1,3 +1,4 @@
+// test-project/midlewares/auth.middleware.js
 // We need the jsonwebtoken library to verify the token
 const jwt = require('jsonwebtoken');
 

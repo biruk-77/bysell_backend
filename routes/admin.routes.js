@@ -1,3 +1,4 @@
+// test-project/routes/admin.routes.js
 // Admin routes
 const express = require('express');
 const router = express.Router();

@@ -1,5 +1,6 @@
+// test-project/controller/auth.controller.js
 // Import the Profile, User and Notification models to interact with the database.
-const { Profile, User, Notification } = require('../models');
+const { Profile, User, Notification, OTP } = require('../models');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { createNotification } = require('./notification.controller');
@@ -12,38 +13,47 @@ exports.register = async (req, res) => {
         console.log('  - Body:', req.body);
         console.log('  - Content-Type:', req.headers['content-type']);
         
-        const { username, email, password, role } = req.body;
+        let { username, email, phoneNumber, password, role } = req.body;
+        
+        // Auto-generate username for phone registration
+        if (!username && phoneNumber) {
+            username = `user_${phoneNumber.replace(/\+/g, '').replace(/\s/g, '').slice(-10)}`;
+            console.log('📱 Auto-generated username for phone registration:', username);
+        }
         
         console.log('🔍 Extracted fields:');
         console.log('  - username:', username, typeof username);
         console.log('  - email:', email, typeof email);
+        console.log('  - phoneNumber:', phoneNumber, typeof phoneNumber);
         console.log('  - password:', password ? '[HIDDEN]' : 'MISSING', typeof password);
         console.log('  - role:', role, typeof role);
 
-        // Validate required fields
-        if (!username || !email || !password) {
-            console.log('❌ Missing required fields validation failed');
-            return res.status(400).json({ 
-                message: 'Username, email, and password are required' 
-            });
-        }
-        
-        console.log('✅ Required fields validation passed');
+        // NOTE: Validation is already done by security middleware
+        console.log('✅ Validation passed (security middleware)');
 
-        // Check if user already exists
+        // Check if user already exists (by email, phone, or username)
+        const { Op } = require('sequelize');
+        const whereConditions = [{ username: username }];
+        
+        if (email) whereConditions.push({ email: email });
+        if (phoneNumber) whereConditions.push({ phoneNumber: phoneNumber });
+        
         const existingUser = await User.findOne({ 
             where: { 
-                [require('sequelize').Op.or]: [
-                    { email: email },
-                    { username: username }
-                ]
+                [Op.or]: whereConditions
             }
         });
 
         if (existingUser) {
-            console.log('❌ User already exists:', existingUser.email || existingUser.username);
+            console.log('❌ User already exists:', existingUser.email || existingUser.phoneNumber || existingUser.username);
+            let conflictField = 'username';
+            if (existingUser.email === email) conflictField = 'email';
+            if (existingUser.phoneNumber === phoneNumber) conflictField = 'phone number';
+            
             return res.status(400).json({ 
-                message: 'User with this email or username already exists' 
+                success: false,
+                message: `This ${conflictField} is already taken`,
+                errors: [`A user with this ${conflictField} already exists`]
             });
         }
         
@@ -56,22 +66,28 @@ exports.register = async (req, res) => {
         console.log('✅ Password hashed successfully');
 
         // Create new user
+        const userData = {
+            username,
+            password: hashedPassword,
+            role: role || 'employee', // Default to employee if no role provided
+            status: 'active',
+            isEmailVerified: false
+        };
+        
+        // Add email or phoneNumber (whichever is provided)
+        if (email) userData.email = email;
+        if (phoneNumber) userData.phoneNumber = phoneNumber;
+        
         console.log('👤 Creating user with data:', {
             username,
-            email,
+            email: email || 'N/A',
+            phoneNumber: phoneNumber || 'N/A',
             role: role || 'employee',
             status: 'active',
             isEmailVerified: false
         });
         
-        const newUser = await User.create({
-            username,
-            email,
-            password: hashedPassword,
-            role: role || 'employee', // Default to employee if no role provided
-            status: 'active',
-            isEmailVerified: false
-        });
+        const newUser = await User.create(userData);
         
         console.log('✅ User created successfully:', newUser.id);
 
@@ -135,40 +151,88 @@ exports.register = async (req, res) => {
             stack: error.stack
         });
         
-        // Check if it's a Sequelize validation error
+        // Handle different types of errors
         if (error.name === 'SequelizeValidationError') {
             console.log('❌ Sequelize validation error:', error.errors);
             return res.status(400).json({ 
                 success: false,
-                message: 'Validation failed',
-                errors: error.errors?.map(e => e.message) || []
+                message: 'Please fix the following errors:',
+                errors: error.errors?.map(e => e.message) || ['Validation failed']
+            });
+        }
+        
+        if (error.name === 'SequelizeUniqueConstraintError') {
+            console.log('❌ Unique constraint error:', error.errors);
+            return res.status(400).json({ 
+                success: false,
+                message: 'This email or username is already taken',
+                errors: ['A user with these details already exists']
+            });
+        }
+        
+        if (error.code === 'ER_DUP_ENTRY') {
+            return res.status(400).json({ 
+                success: false,
+                message: 'This email or username is already taken',
+                errors: ['A user with these details already exists']
             });
         }
         
         res.status(500).json({ 
             success: false,
-            message: 'Something went wrong during registration' 
+            message: 'Registration failed. Please try again.',
+            errors: ['Server error occurred during registration']
         });
     }
 };
 
 exports.login = async (req, res) => {
     try {
-        const { email, password } = req.body;
+        const { email, username, phone, password } = req.body;
 
         // Validate required fields
-        if (!email || !password) {
+        const errors = [];
+        if (!email && !username && !phone) {
+            errors.push('Email, username, or phone is required');
+        }
+        if (!password) errors.push('Password is required');
+        
+        if (errors.length > 0) {
             return res.status(400).json({ 
-                message: 'Email and password are required' 
+                success: false,
+                message: 'Please fill in all required fields',
+                errors: errors
             });
         }
 
-        // Find user by email
-        const user = await User.findOne({ where: { email } });
+        console.log('🔑 Login attempt:', { email, username, phone });
+
+        // Find user by email, username, or phone
+        const { Op } = require('sequelize');
+        const whereConditions = [];
+        
+        if (email) whereConditions.push({ email });
+        if (username) whereConditions.push({ username });
+        if (phone) {
+            // Normalize phone number
+            let normalizedPhone = phone.replace(/\D/g, '');
+            if (normalizedPhone.match(/^(09|07)\d{7,8}$/)) {
+                normalizedPhone = normalizedPhone.replace(/^0/, '251');
+            }
+            whereConditions.push({ phoneNumber: normalizedPhone });
+        }
+        
+        const user = await User.findOne({ 
+            where: { 
+                [Op.or]: whereConditions
+            }
+        });
 
         if (!user) {
             return res.status(401).json({ 
-                message: 'Invalid email or password' 
+                success: false,
+                message: 'Invalid credentials',
+                errors: ['No account found with these credentials']
             });
         }
 
@@ -177,7 +241,9 @@ exports.login = async (req, res) => {
 
         if (!isPasswordValid) {
             return res.status(401).json({ 
-                message: 'Invalid email or password' 
+                success: false,
+                message: 'Invalid credentials',
+                errors: ['The password you entered is incorrect']
             });
         }
 
@@ -187,6 +253,7 @@ exports.login = async (req, res) => {
                 id: user.id, 
                 username: user.username, 
                 email: user.email,
+                phoneNumber: user.phoneNumber,
                 role: user.role 
             },
             process.env.JWT_SECRET,
@@ -196,7 +263,7 @@ exports.login = async (req, res) => {
         // Update last login
         await user.update({ lastLogin: new Date() });
 
-        console.log(`🔑 User logged in: ${user.username} (${user.role})`);
+        console.log(`✅ User logged in: ${user.username} (${user.role})`);
 
         // Send success response
         res.status(200).json({
@@ -207,6 +274,7 @@ exports.login = async (req, res) => {
                 id: user.id,
                 username: user.username,
                 email: user.email,
+                phoneNumber: user.phoneNumber,
                 role: user.role,
                 status: user.status,
                 isEmailVerified: user.isEmailVerified,
@@ -215,9 +283,44 @@ exports.login = async (req, res) => {
         });
 
     } catch (error) {
-        console.error('Login error:', error);
+        console.error('💥 Login error:', error);
         res.status(500).json({ 
-            message: 'Something went wrong during login' 
+            success: false,
+            message: 'Login failed. Please try again.',
+            errors: ['Server error occurred during login']
+        });
+    }
+};
+
+// --- CHECK USERNAME AVAILABILITY ---
+exports.checkUsername = async (req, res) => {
+    try {
+        const { username } = req.params;
+
+        if (!username) {
+            return res.status(400).json({
+                success: false,
+                message: 'Username is required'
+            });
+        }
+
+        // Check if username exists
+        const existingUser = await User.findOne({
+            where: { username },
+            attributes: ['id']
+        });
+
+        res.status(200).json({
+            success: true,
+            available: !existingUser,
+            message: existingUser ? 'Username is already taken' : 'Username is available'
+        });
+
+    } catch (error) {
+        console.error('Check username error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to check username availability'
         });
     }
 };
@@ -432,6 +535,297 @@ exports.deleteAccount = async (req, res) => {
         console.error('Delete account error:', error);
         res.status(500).json({ 
             message: 'Something went wrong deleting account' 
+        });
+    }
+};
+
+// --- OTP FUNCTIONS ---
+
+// Send OTP to phone number
+exports.sendOTP = async (req, res) => {
+    try {
+        const { phoneNumber } = req.body;
+
+        if (!phoneNumber) {
+            return res.status(400).json({
+                success: false,
+                message: 'Phone number is required'
+            });
+        }
+
+        console.log('📱 Sending OTP to:', phoneNumber);
+
+        // Normalize phone number
+        let normalizedPhone = phoneNumber.replace(/\D/g, '');
+        if (normalizedPhone.match(/^(09|07)\d{7,8}$/)) {
+            normalizedPhone = normalizedPhone.replace(/^0/, '251');
+        }
+
+        // Check for existing pending OTP - COMMENTED OUT FOR DEVELOPMENT
+        // const existingOtp = await OTP.findOne({
+        //     where: {
+        //         phone: normalizedPhone,
+        //         status: 'pending',
+        //         expiresAt: { [require('sequelize').Op.gt]: Date.now() }
+        //     }
+        // });
+
+        // if (existingOtp) {
+        //     const remainingSeconds = Math.ceil((existingOtp.expiresAt - Date.now()) / 1000);
+        //     return res.status(429).json({
+        //         success: false,
+        //         message: `Please wait ${remainingSeconds} seconds before requesting another OTP`
+        //     });
+        // }
+
+        // Generate 6-digit OTP
+        const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
+        console.log('🔐 Generated OTP:', otpCode);
+
+        // Hash the OTP before storing
+        const hashedOTP = await bcrypt.hash(otpCode, 10);
+
+        // Set expiration (5 minutes)
+        const expiresAt = Date.now() + (5 * 60 * 1000);
+
+        // Clean up old OTPs for this phone
+        await OTP.destroy({
+            where: {
+                phone: normalizedPhone,
+                status: { [require('sequelize').Op.in]: ['expired', 'verified'] }
+            }
+        });
+
+        // Store OTP in database
+        await OTP.create({
+            phone: normalizedPhone,
+            hashedSecret: hashedOTP,
+            expiresAt: expiresAt,
+            attempts: 0,
+            status: 'pending',
+            referenceType: 'User',
+            referenceId: 'pending'
+        });
+
+        // Send SMS via Geez SMS
+        let smsSuccess = false;
+        try {
+            const createSingleSMSUtil = require('../utils/sendSingleSMSUtil');
+            const smsUtil = createSingleSMSUtil({ 
+                token: process.env.SMS_API_TOKEN 
+            });
+
+            const message = `Your Ethio Connect verification code is: ${otpCode}. Valid for 5 minutes.`;
+            
+            console.log('📤 Attempting to send SMS...');
+            console.log('  To:', normalizedPhone);
+            console.log('  Message:', message);
+            console.log('  Token:', process.env.SMS_API_TOKEN ? 'Set ✓' : 'MISSING ✗');
+            
+            const smsResult = await smsUtil.sendSingleSMS({
+                phone: normalizedPhone,
+                msg: message,
+                shortcode_id: process.env.SMS_SHORTCODE_ID,
+                callback: process.env.SMS_CALLBACK_URL
+            });
+
+            console.log('✅ SMS sent successfully!');
+            console.log('  API Response:', smsResult);
+            smsSuccess = true;
+        } catch (smsError) {
+            console.error('❌ SMS FAILED!');
+            console.error('  Error:', smsError.message);
+            console.error('  Stack:', smsError.stack);
+            // Continue anyway - in development, OTP is returned in response
+        }
+
+        // In development, return the OTP
+        const isDevelopment = process.env.NODE_ENV !== 'production';
+
+        res.status(200).json({
+            success: true,
+            message: `OTP sent to ${phoneNumber}`,
+            ...(isDevelopment && { otp: otpCode }),
+            expiresIn: 300,
+            smsStatus: smsSuccess ? 'sent' : 'failed (check server logs)'
+        });
+
+    } catch (error) {
+        console.error('Send OTP error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to send OTP: ' + error.message
+        });
+    }
+};
+
+// Verify OTP and register user
+exports.verifyOTPAndRegister = async (req, res) => {
+    try {
+        const { phoneNumber, otp, role } = req.body;
+
+        if (!phoneNumber || !otp) {
+            return res.status(400).json({
+                success: false,
+                message: 'Phone number and OTP are required'
+            });
+        }
+
+        console.log('🔍 Verifying OTP for:', phoneNumber);
+
+        // Normalize phone number
+        let normalizedPhone = phoneNumber.replace(/\D/g, '');
+        if (normalizedPhone.match(/^(09|07)\d{7,8}$/)) {
+            normalizedPhone = normalizedPhone.replace(/^0/, '251');
+        }
+
+        // Find the OTP record
+        const otpRecord = await OTP.findOne({
+            where: {
+                phone: normalizedPhone,
+                status: 'pending'
+            },
+            order: [['createdAt', 'DESC']]
+        });
+
+        if (!otpRecord) {
+            return res.status(400).json({
+                success: false,
+                message: 'No OTP found for this phone number'
+            });
+        }
+
+        // Check if expired
+        if (Date.now() > otpRecord.expiresAt) {
+            await otpRecord.update({ status: 'expired' });
+            return res.status(400).json({
+                success: false,
+                message: 'OTP has expired. Please request a new one.'
+            });
+        }
+
+        // Check attempts
+        if (otpRecord.attempts >= 3) {
+            await otpRecord.update({ status: 'locked' });
+            return res.status(400).json({
+                success: false,
+                message: 'Too many attempts. Please request a new OTP.'
+            });
+        }
+
+        // Verify OTP
+        const isValid = await bcrypt.compare(otp, otpRecord.hashedSecret);
+
+        if (!isValid) {
+            await otpRecord.update({ attempts: otpRecord.attempts + 1 });
+            return res.status(400).json({
+                success: false,
+                message: 'Invalid OTP',
+                attemptsLeft: 3 - (otpRecord.attempts + 1)
+            });
+        }
+
+        // OTP is valid! Mark as verified
+        await otpRecord.update({ status: 'verified' });
+
+        // Check if user already exists
+        const existingUser = await User.findOne({
+            where: { phoneNumber: normalizedPhone }
+        });
+
+        if (existingUser) {
+            // User exists, just log them in
+            const token = jwt.sign(
+                { 
+                    id: existingUser.id, 
+                    username: existingUser.username, 
+                    phoneNumber: existingUser.phoneNumber, 
+                    role: existingUser.role 
+                },
+                process.env.JWT_SECRET,
+                { expiresIn: '24h' }
+            );
+
+            return res.status(200).json({
+                success: true,
+                message: 'Login successful',
+                token,
+                user: {
+                    id: existingUser.id,
+                    username: existingUser.username,
+                    phoneNumber: existingUser.phoneNumber,
+                    role: existingUser.role,
+                    status: existingUser.status
+                }
+            });
+        }
+
+        // Create new user
+        const username = `user_${normalizedPhone.slice(-10)}`;
+        const randomPassword = Math.random().toString(36).slice(-12) + Date.now().toString(36);
+        const hashedPassword = await bcrypt.hash(randomPassword, 10);
+
+        const newUser = await User.create({
+            username,
+            phoneNumber: normalizedPhone,
+            password: hashedPassword,
+            role: role || 'employee',
+            status: 'active',
+            isEmailVerified: false
+        });
+
+        console.log('✅ User created via OTP:', newUser.id);
+
+        // Update OTP record with user reference
+        await otpRecord.update({ referenceId: newUser.id });
+
+        // Generate JWT token
+        const token = jwt.sign(
+            {
+                id: newUser.id,
+                username: newUser.username,
+                phoneNumber: newUser.phoneNumber,
+                role: newUser.role
+            },
+            process.env.JWT_SECRET,
+            { expiresIn: '24h' }
+        );
+
+        // Create welcome notification
+        try {
+            await createNotification({
+                userId: newUser.id,
+                type: 'system_announcement',
+                title: 'Welcome to Ethio Connect!',
+                message: `Welcome ${newUser.username}! Your account has been created successfully.`,
+                priority: 'medium',
+                data: {
+                    isWelcome: true,
+                    userRole: newUser.role
+                }
+            });
+        } catch (notificationError) {
+            console.error('Failed to create welcome notification:', notificationError);
+        }
+
+        res.status(201).json({
+            success: true,
+            message: 'Registration successful',
+            token,
+            user: {
+                id: newUser.id,
+                username: newUser.username,
+                phoneNumber: newUser.phoneNumber,
+                role: newUser.role,
+                status: newUser.status
+            }
+        });
+
+    } catch (error) {
+        console.error('Verify OTP error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to verify OTP'
         });
     }
 };

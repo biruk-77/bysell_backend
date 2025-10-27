@@ -1,3 +1,4 @@
+// test-project/API_DOCUMENTATION.md
 # 🚀 **ByAndSell API Documentation**
 ## **Complete REST API Reference**
 ### **Version: 2.0** - Updated with complete messaging, status tracking, and real-time features
@@ -332,17 +333,20 @@ Authorization: Bearer TOKEN
 ### **💬 Messaging Routes**
 **Base**: `/api/messages`
 
-#### **Send Message**
-```http
-POST /api/messages/send
-Authorization: Bearer TOKEN
-Content-Type: application/json
+#### **⚠️ Message Sending is Socket-Only**
+**Use Socket.io event `send_message` instead of REST API**
 
-{
-  "receiverId": "target-user-uuid",
-  "content": "Hello! How are you?",
-  "messageType": "text"
-}
+```javascript
+// Send message via Socket.io
+socket.emit('send_message', {
+  receiverId: "target-user-uuid",
+  content: "Hello! How are you?",
+  messageType: "text"
+}, (response) => {
+  if (response.success) {
+    console.log('Message sent!');
+  }
+});
 ```
 
 #### **Get Conversation History**

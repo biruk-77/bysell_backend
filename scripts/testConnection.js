@@ -1,3 +1,4 @@
+// test-project/scripts/testConnection.js
 // Test script to create a connection request between test3 and test4
 const { Connection, User } = require('../models');
 

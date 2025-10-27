@@ -1,3 +1,4 @@
+// test-project/models/index.js
 // models/index.js (or your main association file)
 
 const User = require('./user.model');
@@ -8,6 +9,8 @@ const Message = require('./message.model');
 const Notification = require('./notification.model');
 const Conversation = require('./conversation.model');
 const UserStatus = require('./userStatus.model');
+const Review = require('./review.model');
+const OTP = require('./otp.model');
 
 // --- User and Profile Relationship ---
 User.hasOne(Profile, {
@@ -175,6 +178,58 @@ UserStatus.belongsTo(User, {
     as: 'typingToUser'
 });
 
+// --- Review Relationships ---
+// User can write many reviews
+User.hasMany(Review, {
+    foreignKey: 'reviewerId',
+    as: 'reviewsGiven',
+    onDelete: 'CASCADE'
+});
+
+// User can receive many reviews
+User.hasMany(Review, {
+    foreignKey: 'reviewedUserId',
+    as: 'reviewsReceived',
+    onDelete: 'CASCADE'
+});
+
+// Review belongs to reviewer
+Review.belongsTo(User, {
+    foreignKey: 'reviewerId',
+    as: 'reviewer'
+});
+
+// Review belongs to reviewed user
+Review.belongsTo(User, {
+    foreignKey: 'reviewedUserId',
+    as: 'reviewedUser'
+});
+
+// Review can be associated with a connection
+Review.belongsTo(Connection, {
+    foreignKey: 'connectionId',
+    as: 'connection'
+});
+
+Connection.hasMany(Review, {
+    foreignKey: 'connectionId',
+    as: 'reviews'
+});
+
+// --- OTP Relationships ---
+// User can have many OTPs
+User.hasMany(OTP, {
+    foreignKey: 'userId',
+    as: 'otps',
+    onDelete: 'CASCADE'
+});
+
+// OTP belongs to user
+OTP.belongsTo(User, {
+    foreignKey: 'userId',
+    as: 'user'
+});
+
 module.exports = {
     User,
     Profile,
@@ -183,5 +238,7 @@ module.exports = {
     Message,
     Notification,
     Conversation,
-    UserStatus
+    UserStatus,
+    Review,
+    OTP
 };

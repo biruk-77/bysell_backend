@@ -1,3 +1,4 @@
+// test-project/socket-client-test.js
 const io = require('socket.io-client');
 
 // Replace with your actual JWT token

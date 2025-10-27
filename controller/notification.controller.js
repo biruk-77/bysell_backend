@@ -1,3 +1,4 @@
+// test-project/controller/notification.controller.js
 // Notification controller
 const { Notification, User } = require('../models');
 const { Op } = require('sequelize');

@@ -1,3 +1,4 @@
+// test-project/routes/auth.routes.js
 const express = require('express');
 const router = express.Router();
 
@@ -12,6 +13,13 @@ const { validateUserRegistration, validateUserLogin } = require('../midlewares/s
 // These routes do not require a token to be accessed.
 router.post('/register', validateUserRegistration, authController.register);
 router.post('/login', validateUserLogin, authController.login);
+
+// Username availability check
+router.get('/check-username/:username', authController.checkUsername);
+
+// OTP Routes
+router.post('/send-otp', authController.sendOTP);
+router.post('/verify-otp', authController.verifyOTPAndRegister);
 
 
 // --- PROTECTED ROUTES ---

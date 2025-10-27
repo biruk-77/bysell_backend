@@ -1,4 +1,5 @@
- // models/connection.model.js
+// test-project/models/connection.model.js
+ // test-project/models/connection.model.js
 
 const { DataTypes } = require('sequelize');
 const sequelize = require('../config/database');
@@ -34,6 +35,17 @@ const Connection = sequelize.define('Connection', {
     message: {
         type: DataTypes.TEXT,
         allowNull: true // Optional message when sending connection request
+    },
+    connectionType: {
+        type: DataTypes.ENUM('employment', 'rental', 'service', 'marketplace', 'matchmaking', 'general'),
+        allowNull: false,
+        defaultValue: 'general',
+        comment: 'Type of connection: employment (employer-employee), rental (renter-tenant), service (provider-customer), marketplace (buyer-seller), matchmaking (husband-wife)'
+    },
+    purpose: {
+        type: DataTypes.TEXT,
+        allowNull: true,
+        comment: 'Specific purpose or reason for the connection'
     }
 }, {
     tableName: 'connections',
