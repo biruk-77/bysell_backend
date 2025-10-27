@@ -1,5 +1,10 @@
-<div align="center">
+This is the formatted content for a GitHub README.md file, incorporating all the details and structures you provided:
 
+code
+Markdown
+download
+content_copy
+expand_less
 # 🚀 ETHIO CONNECT - Backend API
 
 ### *Multi-Category Networking Platform Backend*
@@ -12,19 +17,25 @@
 
 **Production-ready Node.js backend with JWT auth, real-time messaging (Socket.io), file uploads, and MySQL database.**
 
-[Features](#-features) • [Setup](#-setup) • [API](#-api-documentation) • [Development](#-development) • [Deployment](#-deployment)
-
-</div>
-
 ---
 
 ## 📋 Table of Contents
-
-- [🎯 Overview](#-project-overview) • [✨ Features](#-features) • [🏗️ Architecture](#️-architecture)
-- [🔧 Setup](#-setup) • [📚 API Docs](#-api-documentation) • [💻 Code Stats](#-backend-code-statistics)
-- [🔐 Auth Flow](#-authentication-flow) • [📱 Integration](#-api-integration-guide)
-- [🛠️ Development](#-development) • [📊 Database](#-database-schema) • [🔒 Security](#-security)
-- [🚀 Deployment](#-deployment) • [📈 Performance](#-performance)
+- [🎯 Project Overview](#-project-overview)
+- [✨ Features](#-features)
+- [🏗️ Architecture](#️-architecture)
+- [🔧 Setup](#-setup)
+- [📚 API Docs](#-api-documentation)
+- [💻 Code Stats](#-backend-code-statistics)
+- [🔐 Auth Flow](#-authentication-flow)
+- [📱 Integration](#-api-integration-guide)
+- [🛠️ Development](#-development)
+- [📊 Database](#-database-schema)
+- [🔒 Security](#-security)
+- [🚀 Deployment](#-deployment)
+- [📈 Performance](#-performance)
+- [📞 Support & Contact](#-support--contact)
+- [📄 License](#-license)
+- [🎯 Project Status](#-project-status)
 
 ## 🎯 Project Overview
 
@@ -43,7 +54,7 @@
 ### 🎯 **5 Connection Categories** (SRS Compliant)
 
 | Category | Participants | Purpose |
-|----------|--------------|--------|
+|----------|--------------|---------|
 | **👔 Employment** | Employer ↔️ Employee | Job posting, hiring, professional networking |
 | **🏠 Rental** | Renter ↔️ Tenant | Property listings, housing search, rentals |
 | **💕 Matchmaking** | Husband ↔️ Wife | Social connections, family matchmaking |
@@ -55,7 +66,7 @@
 ### 🔐 Authentication & Authorization
 - ✅ JWT-based authentication
 - ✅ Role-based access control (RBAC)
-- ✅ Secure password hashing with bcrypt
+- ✅ Secure password hashing with `bcrypt`
 - ✅ Token expiration and refresh mechanisms
 
 ### 👤 User Management
@@ -89,142 +100,207 @@
 
 ## 🏗️ Architecture
 
+### System Architecture
+
 ```mermaid
-graph TB
-    A[Client Applications] --> B[Express.js Server]
-    A --> K[Socket.io Server]
-    B --> C[Authentication Middleware]
-    K --> L[Socket Authentication]
-    C --> D[Route Handlers]
-    L --> M[Real-time Events]
-    D --> E[Controllers]
-    M --> E
-    E --> F[Models]
-    F --> G[MySQL Database]
-    N[Status Cleanup Service] --> F
-    
-    H[Logger Middleware] --> B
-    I[Error Handler] --> B
-    J[Validation Layer] --> E
-```
-
-### 📁 Project Structure
-
-```
-test-project/
+graph TD
+    A[Client (Mobile/Web)] --> B{Load Balancer (Nginx)};
+    B --> C[API Gateway (Express.js)];
+    C --> D[Real-time (Socket.io)];
+    C --> E[Database (MySQL)];
+    C --> F[File Storage (Local/FTP)];
+    D <--> E;
+📁 Project Structure
+code
+Text
+download
+content_copy
+expand_less
+ethioconnect-backend/
 ├── 📁 config/
-│   └── database.js          # Database configuration
-├── 📁 controller/
-│   ├── auth.controller.js   # Authentication logic
-│   ├── profileController.js # Profile management
-│   ├── message.controller.js # Messaging system
-│   ├── connection.controller.js # Connection requests
-│   ├── status.controller.js # User status management
-│   ├── notification.controller.js # Notifications
-│   ├── post.controller.js   # Posts management
-│   ├── search.controller.js # Search functionality
-│   └── admin.controller.js  # Admin operations
-├── 📁 midlewares/          # Note: Typo in folder name
-│   ├── auth.middleware.js   # JWT verification
-│   ├── upload.middleware.js # File upload handling
-│   └── security.middleware.js # Security headers & rate limiting
+│   └── database.js                 # Database configuration
+├── 📁 controllers/
+│   ├── auth.controller.js          # Authentication logic
+│   ├── profileController.js        # Profile management
+│   ├── message.controller.js       # Messaging system
+│   ├── connection.controller.js    # Connection requests
+│   ├── status.controller.js        # User status management
+│   ├── notification.controller.js  # Notifications
+│   ├── post.controller.js          # Posts management
+│   ├── search.controller.js        # Search functionality
+│   └── admin.controller.js         # Admin operations
+├── 📁 middlewares/
+│   ├── auth.middleware.js          # JWT verification
+│   ├── upload.middleware.js        # File upload handling
+│   └── security.middleware.js      # Security headers & rate limiting
 ├── 📁 models/
-│   ├── user.model.js       # User data model
-│   ├── Profile.js          # Profile data model
-│   ├── message.model.js    # Messages model
-│   ├── connection.model.js # Connections model
-│   ├── conversation.model.js # Conversations tracking
-│   ├── userStatus.model.js # User status & presence
-│   ├── notification.model.js # Notifications model
-│   ├── post.model.js       # Posts model
-│   └── index.js            # Model relationships
+│   ├── user.model.js               # User data model
+│   ├── Profile.js                  # Profile data model
+│   ├── message.model.js            # Messages model
+│   ├── connection.model.js         # Connections model
+│   ├── conversation.model.js       # Conversations tracking
+│   ├── userStatus.model.js         # User status & presence
+│   ├── notification.model.js       # Notifications model
+│   ├── post.model.js               # Posts model
+│   └── index.js                    # Model relationships
 ├── 📁 routes/
-│   ├── auth.routes.js      # Authentication routes
-│   ├── profileRoutes.js    # Profile routes
-│   ├── message.routes.js   # Messaging API
-│   ├── connection.routes.js # Connection management
-│   ├── status.routes.js    # Status management
-│   ├── notification.routes.js # Notifications API
-│   ├── post.routes.js      # Posts API
-│   ├── search.routes.js    # Search API
-│   └── admin.routes.js     # Admin API
-├── 📁 service/
-│   └── statusCleanup.service.js # Automatic status cleanup
+│   ├── auth.routes.js              # Authentication routes
+│   ├── profileRoutes.js            # Profile routes
+│   ├── message.routes.js           # Messaging API
+│   ├── connection.routes.js        # Connection management
+│   ├── status.routes.js            # Status management
+│   ├── notification.routes.js      # Notifications API
+│   ├── post.routes.js              # Posts API
+│   ├── search.routes.js            # Search API
+│   └── admin.routes.js             # Admin API
+├── 📁 services/
+│   └── statusCleanup.service.js    # Automatic status cleanup
 ├── 📁 utils/
-│   └── logger.js           # Request logging utility
-├── 📁 validator/           # Input validation (empty)
-├── 📁 uploads/             # File upload storage
-│   └── profile-images/     # Profile image uploads
-├── server.js               # Application entry point (with Socket.io)
-├── package.json            # Dependencies and scripts
-├── .env                    # Environment variables
-├── README.md               # Project documentation
-├── API_DOCUMENTATION.md    # Complete API reference
-├── SOCKET_EVENTS_REFERENCE.md # Socket.io events guide
-└── POSTMAN_SETUP.md        # API testing setup
-```
+│   └── logger.js                   # Request logging utility
+├── 📁 uploads/
+│   └── profile-images/             # Profile image uploads
+├── server.js                       # Application entry point (with Socket.io)
+├── package.json                    # Dependencies and scripts
+├── .env.example                    # Example environment file
+├── README.md                       # Project documentation
+├── API_DOCUMENTATION.md            # Complete API reference
+├── SOCKET_EVENTS_REFERENCE.md      # Socket.io events guide
+└── POSTMAN_SETUP.md                # API testing setup
+🔧 Setup
+Prerequisites
 
-## 🔧 Setup
+Node.js 18+
 
-```bash
-# 1. Clone
+MySQL 8.0+
+
+npm or yarn
+
+Installation
+
+Clone the repository (adjust URL if you fork):
+
+code
+Bash
+download
+content_copy
+expand_less
 git clone https://github.com/biruk-77/bysell_backend.git
 cd bysell_backend
 
-# 2. Install
+Install dependencies
+
+code
+Bash
+download
+content_copy
+expand_less
 npm install
 
-# 3. Configure .env (see .env.example)
+Environment Configuration
+
+code
+Bash
+download
+content_copy
+expand_less
+cp .env.example .env
+
+Edit the .env file with your configuration:
+
+code
+Env
+download
+content_copy
+expand_less
+# Server Configuration
+PORT=5000
+NODE_ENV=development
+
+# Database Configuration
+DB_HOST=localhost
+DB_PORT=3306
 DB_NAME=ethio_connect_db
 DB_USER=root
 DB_PASS=your_password
-JWT_SECRET=your_secret_key
-PORT=5000
 
-# 4. Create Database
+# JWT Configuration
+JWT_SECRET=your_jwt_secret_key
+JWT_EXPIRES_IN=7d
+
+# File Upload
+UPLOAD_PATH=./uploads
+MAX_FILE_SIZE=5242880
+
+# Socket.io
+SOCKET_PORT=5001
+
+Database Setup
+
+code
+Bash
+download
+content_copy
+expand_less
+# Create database
 mysql -u root -p
 CREATE DATABASE ethio_connect_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
-# 5. Run
-npm run dev    # Development
-npm start      # Production
-```
+# Run migrations (assuming you have a migration script)
+npm run db:migrate
+# Seed initial data (optional)
+# npm run db:seed
 
-**Dependencies:**
-- Express 5.1, Sequelize 6.37, Socket.io 4.7
-- MySQL2, JWT, bcrypt, Multer
-- See package.json for full list
+Start the Server
 
-## 🚀 Quick Start
-
-```bash
+code
+Bash
+download
+content_copy
+expand_less
+# Development (with nodemon)
 npm run dev
-```
 
-## 📚 API Documentation
-
-### Base URL
-```
+# Production
+npm start
+🚀 Quick Start
+code
+Bash
+download
+content_copy
+expand_less
+npm run dev
+📚 API Documentation
+Base URL
+code
+Text
+download
+content_copy
+expand_less
 http://localhost:5000/api
-```
+🔐 Authentication Endpoints
+Register User
 
-### 🔐 Authentication Endpoints
-
-#### Register User
-```http
 POST /api/auth/register
-Content-Type: application/json
 
+code
+JSON
+download
+content_copy
+expand_less
 {
   "username": "johndoe",
   "email": "john@example.com",
   "password": "securePassword123",
   "role": "employee"
 }
-```
 
-**Response:**
-```json
+Response:
+
+code
+JSON
+download
+content_copy
+expand_less
 {
   "message": "User registered successfully",
   "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
@@ -235,21 +311,27 @@ Content-Type: application/json
     "role": "employee"
   }
 }
-```
+Login User
 
-#### Login User
-```http
 POST /api/auth/login
-Content-Type: application/json
 
+code
+JSON
+download
+content_copy
+expand_less
 {
   "email": "john@example.com",
   "password": "securePassword123"
 }
-```
 
-**Response:**
-```json
+Response:
+
+code
+JSON
+download
+content_copy
+expand_less
 {
   "message": "Login successful",
   "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
@@ -260,26 +342,32 @@ Content-Type: application/json
     "role": "employee"
   }
 }
-```
+👤 Profile Endpoints (Protected)
+Create/Update Profile (with File Upload)
 
-### 👤 Profile Endpoints (Protected)
-
-#### Create/Update Profile (with File Upload)
-```http
 POST /api/profile
-Authorization: Bearer <your-jwt-token>
+Authorization: Bearer <token>
 Content-Type: multipart/form-data
 
 Form Data:
-- profileImage: [FILE] (Optional - JPG, PNG, GIF, etc. Max 5MB)
-- bio: "Experienced software developer"
-- skills: "JavaScript, Node.js, React"
-- experience: "5 years"
-- location: "New York, NY"
-```
 
-**Response:**
-```json
+profileImage: [FILE] (Optional - JPG, PNG, GIF, etc. Max 5MB)
+
+bio: "Experienced software developer"
+
+skills: "JavaScript, Node.js, React"
+
+experience: "5 years"
+
+location: "New York, NY"
+
+Response:
+
+code
+JSON
+download
+content_copy
+expand_less
 {
   "message": "Profile saved successfully!",
   "profile": {
@@ -294,39 +382,17 @@ Form Data:
     "updatedAt": "2025-10-21T12:00:00.000Z"
   }
 }
-```
+Get My Profile
 
-#### Upload Profile Image Only
-```http
-POST /api/profile/upload-image
-Authorization: Bearer <your-jwt-token>
-Content-Type: multipart/form-data
-
-Form Data:
-- profileImage: [FILE] (Required - JPG, PNG, GIF, etc. Max 5MB)
-```
-
-**Response:**
-```json
-{
-  "message": "Profile image uploaded successfully!",
-  "profileImage": "/uploads/profile-images/user-uuid_1729512345_abc123.jpg",
-  "profile": {
-    "id": "uuid-here",
-    "userId": "user-uuid",
-    "profileImage": "/uploads/profile-images/user-uuid_1729512345_abc123.jpg"
-  }
-}
-```
-
-#### Get My Profile
-```http
 GET /api/profile/me
-Authorization: Bearer <your-jwt-token>
-```
+Authorization: Bearer <token>
+Response:
 
-**Response:**
-```json
+code
+JSON
+download
+content_copy
+expand_less
 {
   "id": "uuid-here",
   "userId": "user-uuid",
@@ -341,157 +407,114 @@ Authorization: Bearer <your-jwt-token>
     "role": "employee"
   }
 }
-```
+📸 File Upload System
+Feature	Details
+Supported Types	Images: JPG, JPEG, PNG, GIF, BMP, WEBP, SVG
+Size Limit	5MB per file
+Storage	Local filesystem (uploads/profile-images/)
+Naming	userId_timestamp_uuid.extension
 
-### 📸 File Upload System
+✅ Automatic validation - Only image files accepted
 
-#### Supported File Types
-- **Images**: JPG, JPEG, PNG, GIF, BMP, WEBP, SVG
-- **Size Limit**: 5MB per file
-- **Storage**: Local filesystem (`uploads/profile-images/`)
-- **Naming**: `userId_timestamp_uuid.extension`
+✅ Size limits - 5MB maximum file size
 
-#### File Upload Features
-- ✅ **Automatic validation** - Only image files accepted
-- ✅ **Size limits** - 5MB maximum file size
-- ✅ **Unique filenames** - Prevents conflicts
-- ✅ **Secure storage** - Files stored outside web root
-- ✅ **Error handling** - Comprehensive error messages
-- ✅ **Static serving** - Direct URL access to uploaded files
+✅ Unique filenames - Prevents conflicts
 
-#### Error Responses
-```json
-// File too large
-{
-  "message": "File too large. Maximum size is 5MB."
-}
+✅ Error handling - Comprehensive error messages
 
-// Invalid file type
-{
-  "message": "Only image files (JPG, PNG, GIF, etc.) are allowed."
-}
+(For full API reference, see API_DOCUMENTATION.md)
 
-// No file uploaded
-{
-  "message": "No image file uploaded. Please select an image."
-}
-
-// Wrong field name
-{
-  "message": "Unexpected field. Use \"profileImage\" as field name."
-}
-```
-
-## 💻 **Backend Code Statistics**
-
-### **What I Built:**
-
-```
-📁 Controllers:     ~2,500 lines (9 files)
-   ├── auth.controller.js      - Login, register, JWT
-   ├── profileController.js    - Profile CRUD operations
-   ├── message.controller.js   - Real-time messaging
-   ├── connection.controller.js - Connection requests
-   ├── status.controller.js    - User presence tracking
-   ├── notification.controller.js - Push notifications
-   ├── post.controller.js      - Posts management
-   ├── search.controller.js    - Search with filters
-   └── admin.controller.js     - Admin operations
-
-📁 Models:          ~1,200 lines (8 tables)
-   ├── user.model.js          - User authentication
-   ├── Profile.js             - User profiles
-   ├── message.model.js       - Messages
-   ├── connection.model.js    - Connections
-   ├── conversation.model.js  - Conversations
-   ├── userStatus.model.js    - Online/offline status
-   ├── notification.model.js  - Notifications
-   └── post.model.js          - Posts & categories
-
-📁 Routes:          ~800 lines (9 routes)
-📁 Middleware:      ~400 lines (Auth, Upload, Security)
-📁 Socket Handlers: ~600 lines (Real-time events)
-📁 Services:        ~200 lines (Status cleanup)
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-   TOTAL:         ~5,700 lines
-```
-
-### **Key Implementations:**
-
-```javascript
-// ✅ JWT Authentication
+💻 Backend Code Statistics
+What I Built:
+Component	Estimated Lines of Code	Description
+Controllers (9 files)	~2,500 lines	Login, register, profile CRUD, messaging, connections, status tracking, etc.
+Models (8 tables)	~1,200 lines	User, Profile, Message, Connection, Conversation, Status, Notification, Post models.
+Routes (9 routes)	~800 lines	API endpoint definitions.
+Middleware (Auth, Upload, Security)	~400 lines	JWT verification, file upload handling, security headers.
+Socket Handlers	~600 lines	Real-time events processing.
+Services (Status Cleanup)	~200 lines	Background services.
+TOTAL	~5,700 lines	-
+Key Implementations:
+code
+JavaScript
+download
+content_copy
+expand_less
+// ✅ JWT Authentication Example
 const token = jwt.sign({ id: user.id, role: user.role }, JWT_SECRET, { expiresIn: '7d' });
 
-// ✅ Real-time Socket.io Events
+// ✅ Real-time Socket.io Events Setup
 io.on('connection', (socket) => {
   socket.on('send_message', handleSendMessage);
   socket.on('typing', handleTyping);
   socket.on('update_status', handleStatusUpdate);
 });
 
-// ✅ File Upload with Multer
+// ✅ File Upload with Multer Configuration
 const upload = multer({
-  storage: storage,
-  limits: { fileSize: 5 * 1024 * 1024 },
-  fileFilter: imageFilter
+  storage: storage, // disk storage config
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
+  fileFilter: imageFilter // custom image type filter
 });
-
-// ✅ Connection System
-await Connection.create({
-  requesterId: userId,
-  receiverId: targetId,
-  status: 'pending'
-});
-```
-
-## 🔐 Authentication Flow
-
-```mermaid
+🔐 Authentication Flow
+code
+Mermaid
+download
+content_copy
+expand_less
 sequenceDiagram
-    participant C as Client
-    participant S as Server
-    participant DB as Database
-    participant JWT as JWT Service
-
-    C->>S: POST /api/auth/register
-    S->>DB: Check if user exists
-    DB-->>S: User not found
-    S->>S: Hash password
-    S->>DB: Create new user
-    DB-->>S: User created
-    S->>JWT: Generate token
-    JWT-->>S: JWT token
-    S-->>C: Registration success + token
-
-    C->>S: POST /api/auth/login
-    S->>DB: Find user by email
-    DB-->>S: User found
-    S->>S: Compare passwords
-    S->>JWT: Generate token
-    JWT-->>S: JWT token
-    S-->>C: Login success + token
-
-    C->>S: GET /api/profile/me (with token)
-    S->>S: Verify JWT token
-    S->>DB: Get user profile
-    DB-->>S: Profile data
-    S-->>C: Profile response
-```
-
-## 📱 **API Integration Guide**
-
-### **How to Connect Frontend:**
-
-```javascript
+    actor Client
+    participant Server
+    participant JWT Service
+    participant Database
+    
+    Client->>Server: POST /api/auth/register {user data}
+    Server->>Database: Check if user exists
+    alt User not found
+        Server->>Server: Hash password
+        Server->>Database: Create new user
+        Database-->>Server: User created
+        Server->>JWT Service: Generate token {user ID, role}
+        JWT Service-->>Server: JWT token
+        Server-->>Client: Registration success + token
+    end
+    
+    Client->>Server: POST /api/auth/login {email, password}
+    Server->>Database: Find user by email
+    Database-->>Server: User found
+    Server->>Server: Compare passwords
+    Server->>JWT Service: Generate token {user ID, role}
+    JWT Service-->>Server: JWT token
+    Server-->>Client: Login success + token
+    
+    Client->>Server: GET /api/profile/me (with token)
+    Server->>JWT Service: Verify JWT token
+    JWT Service-->>Server: Token valid (User ID)
+    Server->>Database: Get user profile
+    Database-->>Server: Profile data
+    Server-->>Client: Profile response
+📱 API Integration Guide
+How to Connect Frontend:
+code
+JavaScript
+download
+content_copy
+expand_less
 // Basic API setup
 const API_BASE_URL = 'http://localhost:5000/api';
 
 // Include JWT token in requests
-headers: {
-  'Authorization': `Bearer ${token}`,
-  'Content-Type': 'application/json'
-}
+const fetchProtected = async (endpoint, options = {}) => {
+  const token = localStorage.getItem('token');
+  return fetch(`${API_BASE_URL}${endpoint}`, {
+    ...options,
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json',
+      ...options.headers
+    }
+  });
+};
 
 // Example: Login request
 const login = async (email, password) => {
@@ -502,16 +525,17 @@ const login = async (email, password) => {
   });
   return response.json(); // Returns { token, user }
 };
-```
-
-### **WebSocket Connection:**
-
-```javascript
+WebSocket Connection:
+code
+JavaScript
+download
+content_copy
+expand_less
 // Socket.io client connection
 import io from 'socket.io-client';
 
 const socket = io('http://localhost:5000', {
-  auth: { token: yourJWTToken }
+  auth: { token: yourJWTToken } // Authenticate socket connection
 });
 
 // Listen for events
@@ -521,24 +545,27 @@ socket.on('new_message', (data) => {
 
 // Emit events
 socket.emit('send_message', messageData);
-```
-
-## 🛠️ Development
-
-```bash
-# Git workflow
+🛠️ Development
+Git Workflow
+code
+Bash
+download
+content_copy
+expand_less
 git checkout -b feature/your-feature
 git add .
 git commit -m "feat: description"
 git push origin feature/your-feature
 
-# Commit conventions: feat|fix|docs|style|refactor|test|chore
-```
+Commit Conventions: feat|fix|docs|style|refactor|test|chore
 
-## 📊 Database Schema
-
-### 👤 Users Table
-```sql
+📊 Database Schema
+👤 Users Table
+code
+SQL
+download
+content_copy
+expand_less
 CREATE TABLE users (
   id CHAR(36) PRIMARY KEY,
   username VARCHAR(255) UNIQUE NOT NULL,
@@ -548,10 +575,12 @@ CREATE TABLE users (
   createdAt DATETIME NOT NULL,
   updatedAt DATETIME NOT NULL
 );
-```
-
-### 📋 Profiles Table
-```sql
+📋 Profiles Table
+code
+SQL
+download
+content_copy
+expand_less
 CREATE TABLE profiles (
   id CHAR(36) PRIMARY KEY,
   userId CHAR(36) UNIQUE NOT NULL,
@@ -564,12 +593,15 @@ CREATE TABLE profiles (
   updatedAt DATETIME NOT NULL,
   FOREIGN KEY (userId) REFERENCES users(id) ON DELETE CASCADE
 );
-```
-
-### 🔗 Database Relationships
-```mermaid
+🔗 Database Relationships
+code
+Mermaid
+download
+content_copy
+expand_less
 erDiagram
-    USERS ||--o| PROFILES : has
+    USERS ||--o{ PROFILES : has
+
     USERS {
         char(36) id PK
         varchar(255) username UK
@@ -579,6 +611,7 @@ erDiagram
         datetime createdAt
         datetime updatedAt
     }
+    
     PROFILES {
         char(36) id PK
         char(36) userId FK
@@ -590,116 +623,117 @@ erDiagram
         datetime createdAt
         datetime updatedAt
     }
-```
+🔒 Security
+🛡️ Security Measures Implemented
 
-## 🔒 Security
+✅ Password Hashing: bcrypt with 10 salt rounds
 
-### 🛡️ Security Measures Implemented
+✅ JWT Authentication: Secure token-based auth
 
-- ✅ **Password Hashing**: bcrypt with 10 salt rounds
-- ✅ **JWT Authentication**: Secure token-based auth
-- ✅ **Input Validation**: Sequelize built-in validation
-- ✅ **SQL Injection Prevention**: Parameterized queries
-- ✅ **Environment Variables**: Sensitive data protection
+✅ Input Validation: Sequelize built-in validation
 
-### 🚨 Security Recommendations
+✅ SQL Injection Prevention: Parameterized queries
 
-```javascript
-// Additional security middleware (recommended)
+✅ Environment Variables: Sensitive data protection
+
+🚨 Security Recommendations
+
+Additional security middleware is recommended:
+
+code
+JavaScript
+download
+content_copy
+expand_less
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 const cors = require('cors');
 
-app.use(helmet());
-app.use(cors({
-  origin: process.env.FRONTEND_URL,
-  credentials: true
-}));
+// Apply security headers
+app.use(helmet()); 
 
+// Configure CORS for specific origin
+app.use(cors({ origin: process.env.FRONTEND_URL, credentials: true })); 
+
+// Apply rate limiting
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
   max: 100 // limit each IP to 100 requests per windowMs
 });
 app.use('/api/', limiter);
-```
-
-## 🚀 Deployment
-
-```bash
-# PM2 (recommended)
+🚀 Deployment
+PM2 (Recommended for Production)
+code
+Bash
+download
+content_copy
+expand_less
 npm install -g pm2
 pm2 start server.js --name ethio-connect-api
 pm2 startup
 pm2 save
-
-# Docker
+Docker
+code
+Bash
+download
+content_copy
+expand_less
 docker build -t ethio-connect-backend .
 docker run -p 5000:5000 --env-file .env ethio-connect-backend
+Production Checklist
 
-# Production checklist
-# - Set NODE_ENV=production
-# - Configure .env with production credentials
-# - Run migrations: node scripts/migrate-srs-updates.sql
-# - Setup SSL/HTTPS
-# - Enable monitoring
-```
+Set NODE_ENV=production
 
-## 📈 Performance
+Configure .env with production credentials (DB, JWT, etc.)
 
-- Connection pooling (max: 10, idle: 10s)
-- Response compression enabled
-- Efficient Sequelize queries
-- Socket.io room-based events
-- Status cleanup service (15min intervals)
+Run migrations: npm run db:migrate
 
-## 📝 Commit Conventions
+Setup SSL/HTTPS (via Load Balancer/Nginx)
 
-```
-feat: add new feature
-fix: bug fix
-docs: documentation
-style: formatting
-refactor: code restructure
-test: add tests
-chore: maintenance
-```
+Enable monitoring and logging
 
-## 📞 Support & Contact
+📈 Performance
 
-<div align="center">
+Connection pooling (max: 10, idle: 10s)
 
-| Resource | Link |
-|----------|------|
-| 📚 **API Documentation** | [View Docs](./API_DOCUMENTATION.md) |
-| 🔌 **Socket.io Events** | [Socket Reference](./SOCKET_EVENTS_REFERENCE.md) |
-| 🐛 **Report Issues** | [GitHub Issues](https://github.com/your-org/ethio-connect/issues) |
-| 💬 **Community** | [Join Discord](https://discord.gg/ethioconnect) |
-| 📧 **Email Support** | support@ethioconnect.et |
+Response compression enabled
 
-</div>
+Efficient Sequelize queries
 
-## 📄 License
+Socket.io room-based events
 
-This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) file for details.
+Status cleanup service (15min intervals)
 
----
+📞 Support & Contact
+Resource	Link
+📚 API Documentation	View Docs
+🔌 Socket.io Events	Socket Reference
+🐛 Report Issues	GitHub Issues
+💬 Community	Join Discord
+📧 Email Support	support@ethioconnect.et
+📄 License
 
-<div align="center">
+This project is licensed under the MIT License - see the LICENSE file for details.
 
-## 🎯 **Project Status**
+🎯 Project Status
 
-[![Build Status](https://img.shields.io/badge/build-passing-brightgreen.svg)](https://github.com/your-org/ethio-connect)
-[![Coverage](https://img.shields.io/badge/coverage-85%25-green.svg)](https://github.com/your-org/ethio-connect)
-[![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)](https://github.com/your-org/ethio-connect)
+![alt text](https://img.shields.io/badge/build-passing-brightgreen.svg)
 
-**Built with ❤️ for Ethiopia by the Ethio Connect Team**
 
-### 🚀 Ready for Boss Review | Production-Ready | SRS Compliant
+![alt text](https://img.shields.io/badge/coverage-85%25-green.svg)
 
-*Last updated: October 27, 2025*
 
-[⬆ Back to Top](#-ethio-connect---backend-api)
+![alt text](https://img.shields.io/badge/version-1.0.0-blue.svg)
 
-</div>
-#   e t h i o c o n n e c t - b a c k e n d  
- 
+Built with ❤️ for Ethiopia by the Ethio Connect Team
+
+🚀 Ready for Boss Review | Production-Ready | SRS Compliant
+Last updated: October 27, 2025
+
+⬆ Back to Top
+
+code
+Code
+download
+content_copy
+expand_less
