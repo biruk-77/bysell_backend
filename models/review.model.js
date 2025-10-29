@@ -1,6 +1,5 @@
-// test-project/models/review.model.js
 const { DataTypes } = require('sequelize');
-const sequelize = require('../config/database');
+const sequelize = require('../core/config/db');
 
 const Review = sequelize.define('Review', {
     id: {

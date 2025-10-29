@@ -2,7 +2,7 @@
 // models/userStatus.model.js
 
 const { DataTypes } = require('sequelize');
-const sequelize = require('../config/database');
+const sequelize = require('../core/config/db');
 
 const UserStatus = sequelize.define('UserStatus', {
     id: {

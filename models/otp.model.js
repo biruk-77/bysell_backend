@@ -1,6 +1,5 @@
-// test-project/models/otp.model.js
 const { DataTypes } = require('sequelize');
-const sequelize = require('../config/database');
+const sequelize = require('../core/config/db');
 
 const OTP = sequelize.define('OTP', {
     id: {

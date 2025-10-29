@@ -2,7 +2,7 @@
  // test-project/models/connection.model.js
 
 const { DataTypes } = require('sequelize');
-const sequelize = require('../config/database');
+const sequelize = require('../core/config/db');
 
 const Connection = sequelize.define('Connection', {
     id: {

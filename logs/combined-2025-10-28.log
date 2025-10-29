@@ -1,0 +1,44 @@
+{
+  message: 'This is an info message',
+  level: 'info',
+  service: 'bysell-backend',
+  timestamp: '2025-10-28 11:07:56'
+}
+{
+  message: 'This is a warning message',
+  level: 'warn',
+  service: 'bysell-backend',
+  timestamp: '2025-10-28 11:07:56'
+}
+{
+  message: 'This is an error message',
+  level: 'error',
+  service: 'bysell-backend',
+  timestamp: '2025-10-28 11:07:56'
+}
+{
+  service: 'bysell-backend',
+  email: 'test@example.com',
+  ip: '127.0.0.1',
+  success: true,
+  timestamp: '2025-10-28 11:07:56',
+  level: 'info',
+  message: 'Login attempt'
+}
+{
+  service: 'bysell-backend',
+  phone: '+251941893993',
+  ip: '127.0.0.1',
+  timestamp: '2025-10-28 11:07:56',
+  level: 'info',
+  message: 'OTP requested'
+}
+{
+  service: 'bysell-backend',
+  email: 'test@example.com',
+  phone: '+251941893993',
+  ip: '127.0.0.1',
+  timestamp: '2025-10-28 11:07:56',
+  level: 'info',
+  message: 'User registration'
+}

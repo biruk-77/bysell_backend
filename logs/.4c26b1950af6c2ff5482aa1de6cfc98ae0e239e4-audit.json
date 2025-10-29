@@ -1,0 +1,20 @@
+{
+    "keep": {
+        "days": true,
+        "amount": 30
+    },
+    "auditLog": "C:\\Users\\X1\\pro\\bysell_backend\\logs\\.4c26b1950af6c2ff5482aa1de6cfc98ae0e239e4-audit.json",
+    "files": [
+        {
+            "date": 1761638668270,
+            "name": "C:\\Users\\X1\\pro\\bysell_backend\\logs\\rejections-2025-10-28.log",
+            "hash": "cf5fa24e30aff00e5329c704303925c91035450e82c087337ee4a7244ffd81cf"
+        },
+        {
+            "date": 1761727176900,
+            "name": "C:\\Users\\X1\\pro\\bysell_backend\\logs\\rejections-2025-10-29.log",
+            "hash": "3cb226ad6e9a473b4cbe67f10908e27bd877820e61cb8e1875b87bad59c30cb9"
+        }
+    ],
+    "hashType": "sha256"
+}

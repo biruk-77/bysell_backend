@@ -1,6 +1,5 @@
-// test-project/models/user.model.js
 const { DataTypes } = require('sequelize');
-const sequelize = require('../config/database');
+const sequelize = require('../core/config/db');
 
 const User = sequelize.define('User', {
     id: {
@@ -27,11 +26,11 @@ const User = sequelize.define('User', {
         allowNull: false
     },
     role: {
-        type: DataTypes.ENUM('employer', 'employee', 'buyer', 'seller', 'connector', 'reviewer', 'admin', 'service_provider', 'customer', 'renter', 'tenant', 'husband', 'wife'),
+        type: DataTypes.ENUM('user', 'employer', 'employee', 'buyer', 'seller', 'connector', 'reviewer', 'admin', 'service_provider', 'customer', 'renter', 'tenant', 'husband', 'wife'),
         allowNull: false,
-        defaultValue: 'employee',
+        defaultValue: 'user',
         validate: {
-            isIn: [['employer', 'employee', 'buyer', 'seller', 'connector', 'reviewer', 'admin', 'service_provider', 'customer', 'renter', 'tenant', 'husband', 'wife']]
+            isIn: [['user', 'employer', 'employee', 'buyer', 'seller', 'connector', 'reviewer', 'admin', 'service_provider', 'customer', 'renter', 'tenant', 'husband', 'wife']]
         }
     },
     status: {
@@ -57,6 +56,11 @@ const User = sequelize.define('User', {
     location: {
         type: DataTypes.STRING,
         allowNull: true
+    },
+    otpRegistered: {
+        type: DataTypes.BOOLEAN,
+        defaultValue: false,
+        allowNull: false
     }
     
 },

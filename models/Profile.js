@@ -1,6 +1,5 @@
-// test-project/models/Profile.js
 const { DataTypes } = require('sequelize');
-const sequelize = require('../config/database');
+const sequelize = require('../core/config/db');
 
 const Profile = sequelize.define('Profile', {
     id: {

@@ -1,0 +1,301 @@
+{
+	"info": {
+		"_postman_id": "bysell-api-collection",
+		"name": "BySell Backend API Collection",
+		"description": "Complete API collection for BySell backend with all endpoints, request bodies, and examples",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Health & Status",
+			"item": [
+				{
+					"name": "Health Check",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/health",
+							"host": ["{{base_url}}"],
+							"path": ["health"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Test Endpoint",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/test",
+							"host": ["{{base_url}}"],
+							"path": ["test"]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Authentication",
+			"item": [
+				{
+					"name": "Traditional Auth",
+					"item": [
+						{
+							"name": "Register User",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"username\": \"testuser123\",\n  \"email\": \"test@example.com\",\n  \"phoneNumber\": \"+251912345678\",\n  \"password\": \"SecurePass123!\",\n  \"role\": \"user\"\n}"
+								},
+								"url": {
+									"raw": "{{base_url}}/api/auth/register",
+									"host": ["{{base_url}}"],
+									"path": ["api", "auth", "register"]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Login User",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"username\": \"testuser123\",\n  \"password\": \"SecurePass123!\"\n}"
+								},
+								"url": {
+									"raw": "{{base_url}}/api/auth/login",
+									"host": ["{{base_url}}"],
+									"path": ["api", "auth", "login"]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Check Username Availability",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/api/auth/check-username/testuser123",
+									"host": ["{{base_url}}"],
+									"path": ["api", "auth", "check-username", "testuser123"]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "OTP Authentication",
+					"item": [
+						{
+							"name": "Request OTP",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"phone\": \"+251941893993\"\n}"
+								},
+								"url": {
+									"raw": "{{base_url}}/api/auth/request-otp",
+									"host": ["{{base_url}}"],
+									"path": ["api", "auth", "request-otp"]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Verify OTP",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"phone\": \"+251941893993\",\n  \"otp\": \"123456\"\n}"
+								},
+								"url": {
+									"raw": "{{base_url}}/api/auth/verify-otp",
+									"host": ["{{base_url}}"],
+									"path": ["api", "auth", "verify-otp"]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "Protected Routes",
+					"item": [
+						{
+							"name": "Get Current User",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{access_token}}"
+									}
+								],
+								"url": {
+									"raw": "{{base_url}}/api/auth/me",
+									"host": ["{{base_url}}"],
+									"path": ["api", "auth", "me"]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Update Account",
+							"request": {
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{access_token}}"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"username\": \"newusername123\",\n  \"email\": \"newemail@example.com\"\n}"
+								},
+								"url": {
+									"raw": "{{base_url}}/api/auth/account",
+									"host": ["{{base_url}}"],
+									"path": ["api", "auth", "account"]
+								}
+							},
+							"response": []
+						}
+					]
+				}
+			]
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					"// Auto-set Authorization header for protected routes",
+					"const protectedRoutes = ['/me', '/account', '/profile', '/posts', '/chat', '/notifications'];",
+					"const isProtectedRoute = protectedRoutes.some(route => pm.request.url.path.join('/').includes(route));",
+					"",
+					"if (isProtectedRoute && pm.collectionVariables.get('access_token')) {",
+					"    pm.request.headers.add({",
+					"        key: 'Authorization',",
+					"        value: 'Bearer ' + pm.collectionVariables.get('access_token')",
+					"    });",
+					"}"
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					"// Auto-extract tokens from auth responses",
+					"if (pm.response.code === 200 || pm.response.code === 201) {",
+					"    try {",
+					"        const responseJson = pm.response.json();",
+					"        if (responseJson.accessToken) {",
+					"            pm.collectionVariables.set('access_token', responseJson.accessToken);",
+					"            console.log('✅ Access token updated');",
+					"        }",
+					"        if (responseJson.refreshToken) {",
+					"            pm.collectionVariables.set('refresh_token', responseJson.refreshToken);",
+					"            console.log('✅ Refresh token updated');",
+					"        }",
+					"        if (responseJson.user && responseJson.user.id) {",
+					"            pm.collectionVariables.set('user_id', responseJson.user.id);",
+					"            console.log('✅ User ID updated');",
+					"        }",
+					"    } catch (e) {",
+					"        // Not a JSON response or no tokens",
+					"    }",
+					"}"
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:5000",
+			"type": "string"
+		},
+		{
+			"key": "access_token",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "refresh_token",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "admin_access_token",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "user_id",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "post_id",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "conversation_id",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "notification_id",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "receiver_user_id",
+			"value": "",
+			"type": "string"
+		}
+	]
+}

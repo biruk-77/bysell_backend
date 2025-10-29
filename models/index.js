@@ -1,6 +1,3 @@
-// test-project/models/index.js
-// models/index.js (or your main association file)
-
 const User = require('./user.model');
 const Profile = require('./Profile');
 const Post = require('./post.model');
@@ -11,8 +8,6 @@ const Conversation = require('./conversation.model');
 const UserStatus = require('./userStatus.model');
 const Review = require('./review.model');
 const OTP = require('./otp.model');
-
-// --- User and Profile Relationship ---
 User.hasOne(Profile, {
     foreignKey: 'userId',
     as: 'profile',

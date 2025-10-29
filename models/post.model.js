@@ -2,7 +2,7 @@
 // models/post.model.js
 
 const { DataTypes } = require('sequelize');
-const sequelize = require('../config/database');
+const sequelize = require('../core/config/db');
 
 const Post = sequelize.define('Post', {
     id: {

@@ -1,0 +1,6 @@
+{
+  message: 'This is an error message',
+  level: 'error',
+  service: 'bysell-backend',
+  timestamp: '2025-10-28 11:07:56'
+}
